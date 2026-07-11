@@ -1,0 +1,134 @@
+services:
+  inventory-db:
+    container_name: inventory-db
+    image: killux3k/inventory-db:1.0.0
+    build:
+      context: srcs/postgres-db
+    restart: on-failure
+    environment:
+      - DB_USER=${INVENTORY_DB_USER}
+      - DB_PASS=${INVENTORY_DB_PASS}
+      - DB_NAME=${INVENTORY_DB_NAME}
+    expose:
+      - 5432
+    volumes:
+      - inventory_database:/var/lib/postgresql/main
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U $$DB_USER -d $$DB_NAME"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 20s
+    networks:
+      - mynetwork
+
+  inventory-app:
+    container_name: inventory-app
+    image: killux3k/inventory-app:1.0.0
+    build:
+      context: srcs/inventory-app
+    env_file: .env
+    restart: on-failure
+    expose:
+      - ${INVENTORY_APP_PORT}
+    depends_on:
+      inventory-db:
+        condition: service_healthy
+    networks:
+      - mynetwork
+
+  billing-db:
+    container_name: billing-db
+    image: killux3k/billing-db:1.0.0
+    build:
+      context: srcs/postgres-db
+    restart: on-failure
+    environment:
+      - DB_USER=${BILLING_DB_USER}
+      - DB_PASS=${BILLING_DB_PASS}
+      - DB_NAME=${BILLING_DB_NAME}
+    expose:
+      - 5432
+    volumes:
+      - billing_database:/var/lib/postgresql/main
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U $$DB_USER -d $$DB_NAME"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 20s
+    networks:
+      - mynetwork
+
+  billing-queue:
+    container_name: billing-queue
+    image: killux3k/billing-queue:1.0.0
+    hostname: rabbit-host
+    build:
+      context: srcs/rabbitmq
+    restart: on-failure
+    env_file: .env
+    expose:
+      - ${RABBITMQ_PORT}
+    volumes:
+      - billing-queue-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    networks:
+      - mynetwork
+  
+  billing-app:
+    container_name: billing-app
+    image: killux3k/billing-app:1.0.0
+    build:
+      context: srcs/billing-app
+    env_file: .env
+    environment:
+      - RABBITMQ_HOST=billing-queue
+    restart: on-failure
+    expose:
+      - ${BILLING_APP_PORT}
+    depends_on:
+      billing-db:
+        condition: service_healthy
+      billing-queue:
+        condition: service_healthy
+    networks:
+      - mynetwork
+
+  api-gateway:
+    container_name: api-gateway
+    image: killux3k/api-gateway:1.0.0
+    restart: on-failure
+    build:
+      context: srcs/api-gateway
+    env_file: .env
+    volumes:
+      - api-gateway-logs:/app/logs
+    environment:
+      - RABBITMQ_HOST=billing-queue
+      - INVENTORY_APP_HOST=inventory-app
+      - BILLING_APP_HOST=billing-app
+    ports:
+      - ${APIGATEWAY_PORT}:${APIGATEWAY_PORT}
+    depends_on:
+      billing-queue:
+        condition: service_healthy
+      inventory-app:
+        condition: service_started
+    networks:
+      - mynetwork
+
+volumes:
+  inventory_database:
+  billing_database:
+  billing-queue-data:
+  api-gateway-logs:
+
+networks:
+  mynetwork:
+    driver: bridge
