@@ -1,5 +1,8 @@
 {
     "material-icon-theme.files.associations": {
         "*.tfvars.example": "terraform",
+    },
+    "material-icon-theme.folders.associations": {
+        "vpc": "Cloudflare"
     }
 }
