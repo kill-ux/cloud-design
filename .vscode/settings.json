@@ -3,6 +3,7 @@
         "*.tfvars.example": "terraform",
     },
     "material-icon-theme.folders.associations": {
-        "vpc": "Cloudflare"
+        "vpc": "Cloudflare",
+        "alb": "Connection"
     }
 }
