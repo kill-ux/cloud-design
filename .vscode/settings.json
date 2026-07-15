@@ -4,6 +4,7 @@
     },
     "material-icon-theme.folders.associations": {
         "vpc": "Cloudflare",
-        "alb": "Connection"
+        "alb": "Connection",
+        "ecs": "App"
     }
 }
