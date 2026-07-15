@@ -27,11 +27,11 @@ build_and_push() {
 }
 
 # Adjust paths to where YOUR Dockerfiles live
-build_and_push "inventory-db"    "$INVENTORY_DB_TAG"    "./postgres-db"
-build_and_push "billing-db"      "$BILLING_DB_TAG"      "./postgres-db"
-build_and_push "billing-queue"   "$BILLING_QUEUE_TAG"   "./rabbitmq"
-build_and_push "inventory-app"   "$INVENTORY_APP_TAG"   "./inventory-app"
-build_and_push "billing-app"     "$BILLING_APP_TAG"     "./billing-app"
-build_and_push "api-gateway"     "$API_GATEWAY_TAG"     "./api-gateway"
+build_and_push "inventory-db"    "$INVENTORY_DB_TAG"    "./srcs/postgres-db"
+build_and_push "billing-db"      "$BILLING_DB_TAG"      "./srcs/postgres-db"
+build_and_push "billing-queue"   "$BILLING_QUEUE_TAG"   "./srcs/rabbitmq"
+build_and_push "inventory-app"   "$INVENTORY_APP_TAG"   "./srcs/inventory-app"
+build_and_push "billing-app"     "$BILLING_APP_TAG"     "./srcs/billing-app"
+build_and_push "api-gateway"     "$API_GATEWAY_TAG"     "./srcs/api-gateway"
 
-log "All images built and pushed! ✅"
+log "All images built and pushed! :)"
