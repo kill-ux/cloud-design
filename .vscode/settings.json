@@ -5,6 +5,7 @@
     "material-icon-theme.folders.associations": {
         "vpc": "Cloudflare",
         "alb": "Connection",
-        "ecs": "App"
+        "ecs": "App",
+        "ecr": "Database"
     }
 }
