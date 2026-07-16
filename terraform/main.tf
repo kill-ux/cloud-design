@@ -19,7 +19,7 @@ module "ecr" {
   source = "./modules/aws/ecr"
 }
 
-module "ecs" {
-  source = "./modules/aws/ecs"
-  ecs_execution_role_arn = module.iam.ecs_execution_role_arn
-}
+# module "ecs" {
+#   source = "./modules/aws/ecs"
+#   ecs_execution_role_arn = module.iam.ecs_execution_role_arn
+# }
