@@ -1,4 +1,14 @@
 variable "ecs_execution_role_arn" {
   description = "ARN of the ECS execution role"
+  type        = string
+}
+
+variable "ecs_instance_profile_name" {
+  description = "Name of the ECS instance profile"
+  type        = string
+}
+
+variable "ecs_instance_sg_id" {
+  description = "SG for EC2"
   type = string
 }

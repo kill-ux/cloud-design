@@ -122,11 +122,11 @@ resource "aws_security_group" "billing_db_sg" {
 
 resource "aws_vpc_security_group_ingress_rule" "billing_db_from_billing_app" {
   security_group_id            = aws_security_group.billing_db_sg.id
-  description                   = "Allow traffic from billing app"
+  description                  = "Allow traffic from billing app"
   referenced_security_group_id = aws_security_group.billing_sg.id
-  from_port                     = 5432
-  to_port                       = 5432
-  ip_protocol                   = "tcp"
+  from_port                    = 5432
+  to_port                      = 5432
+  ip_protocol                  = "tcp"
 }
 
 # ---------------------------------------------------------------------------
@@ -142,11 +142,11 @@ resource "aws_security_group" "inventory_db_sg" {
 
 resource "aws_vpc_security_group_ingress_rule" "inventory_db_from_inventory_app" {
   security_group_id            = aws_security_group.inventory_db_sg.id
-  description                   = "Allow traffic from inventory app"
+  description                  = "Allow traffic from inventory app"
   referenced_security_group_id = aws_security_group.inventory_sg.id
-  from_port                     = 5432
-  to_port                       = 5432
-  ip_protocol                   = "tcp"
+  from_port                    = 5432
+  to_port                      = 5432
+  ip_protocol                  = "tcp"
 }
 
 # ---------------------------------------------------------------------------
@@ -169,7 +169,35 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_out" {
   for_each = local.security_groups
 
   security_group_id = each.value
+  description       = "Allow all outbound"
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "-1"
+}
+
+# ---------------------------------------------------------------------------
+# ECS INSTENCE
+# ---------------------------------------------------------------------------
+
+resource "aws_security_group" "ecs_instance_sg" {
+  name        = "ecs_instance_sg"
+  description = "Security group for ECS EC2 instances (bridge mode testing)"
+  vpc_id      = var.vpc_id
+
+  tags = { "Name" = "cloud-design-ecs-instance-sg" }
+}
+
+resource "aws_vpc_security_group_ingress_rule" "ecs_instance_from_alb" {
+  security_group_id            = aws_security_group.ecs_instance_sg.id
+  description                  = "Allow traffic from ALB"
+  referenced_security_group_id = aws_security_group.alb_sg.id
+  from_port                    = 80
+  to_port                      = 80
+  ip_protocol                  = "tcp"
+}
+
+resource "aws_vpc_security_group_egress_rule" "ecs_instance_all_out" {
+  security_group_id = aws_security_group.ecs_instance_sg.id
   description        = "Allow all outbound"
   cidr_ipv4          = "0.0.0.0/0"
-  ip_protocol        = "-1"
+  ip_protocol         = "-1"
 }

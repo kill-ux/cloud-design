@@ -32,3 +32,9 @@ output "rabbitmq_sg_id" {
   description = "Security group ID for RabbitMQ message queue"
   value       = aws_security_group.rabbitmq_sg.id
 }
+
+
+output "ecs_instance_sg_id" {
+  description = "Security group ID for ECS instances"
+  value       = aws_security_group.ecs_instance_sg.id
+}
