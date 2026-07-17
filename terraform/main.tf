@@ -24,4 +24,5 @@ module "ecr" {
 #   ecs_execution_role_arn = module.iam.ecs_execution_role_arn
 #   ecs_instance_profile_name = module.iam.ecs_instance_profile_name
 #   ecs_instance_sg_id = module.security.ecs_instance_sg_id
+#   private_subnet_ids = module.vpc.private_subnet_ids
 # }
