@@ -42,9 +42,9 @@ resource "aws_launch_template" "ecs_lt" {
 
 resource "aws_autoscaling_group" "ecs_asg" {
   name                = "cloud-design-ecs-asg"
-  desired_capacity    = 0
-  min_size            = 0
-  max_size            = 1
+  desired_capacity    = 0 #2
+  min_size            = 0 #2
+  max_size            = 0 #2
   vpc_zone_identifier = var.public_subnet_ids
 
   launch_template {
@@ -91,7 +91,7 @@ resource "aws_ecs_cluster_capacity_providers" "cloud_design_cp_assoc" {
 resource "aws_ecs_task_definition" "nginx" {
   family                   = "nginx"
   requires_compatibilities = ["EC2"]
-  network_mode             = "bridge"
+  network_mode             = "awsvpc"
   cpu                      = "256"
   memory                   = "512"
   container_definitions = jsonencode([
@@ -104,7 +104,6 @@ resource "aws_ecs_task_definition" "nginx" {
       portMappings = [
         {
           containerPort = 80
-          hostPort      = 80
           protocol      = "tcp"
         }
       ]
@@ -115,12 +114,32 @@ resource "aws_ecs_task_definition" "nginx" {
   ])
 }
 
-resource "aws_ecs_service" "nginx_service" {
-  name = "nginx_service"
+resource "aws_ecs_service" "nginx_1" {
+  name = "nginx_service_1"
   cluster = aws_ecs_cluster.cloud_design_cluster.id
   task_definition = aws_ecs_task_definition.nginx.arn
   desired_count = 0
   force_new_deployment = true
+
+  network_configuration {
+    subnets = var.public_subnet_ids
+    security_groups = [ var.ecs_instance_sg_id ]
+  }
+
+  depends_on = [ aws_ecs_cluster_capacity_providers.cloud_design_cp_assoc ]
+}
+
+resource "aws_ecs_service" "nginx_2" {
+  name = "nginx_service_2"
+  cluster = aws_ecs_cluster.cloud_design_cluster.id
+  task_definition = aws_ecs_task_definition.nginx.arn
+  desired_count = 0
+  force_new_deployment = true
+
+  network_configuration {
+    subnets = var.public_subnet_ids
+    security_groups = [ var.ecs_instance_sg_id ]
+  }
 
   depends_on = [ aws_ecs_cluster_capacity_providers.cloud_design_cp_assoc ]
 }
