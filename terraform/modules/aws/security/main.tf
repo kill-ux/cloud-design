@@ -195,6 +195,24 @@ resource "aws_vpc_security_group_ingress_rule" "ecs_instance_from_alb" {
   ip_protocol                  = "tcp"
 }
 
+resource "aws_vpc_security_group_ingress_rule" "ecs_instance_http_temp" {
+  security_group_id = aws_security_group.ecs_instance_sg.id
+  description         = "TEMP: Allow HTTP from anywhere for testing - REMOVE AFTER"
+  cidr_ipv4           = "0.0.0.0/0"
+  from_port           = 80
+  to_port             = 80
+  ip_protocol         = "tcp"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "ecs_instance_ssh_temp" {
+  security_group_id = aws_security_group.ecs_instance_sg.id
+  description         = "TEMP: Allow SSH for debugging"
+  cidr_ipv4           = "154.144.252.170/32"
+  from_port           = 22
+  to_port             = 22
+  ip_protocol         = "tcp"
+}
+
 resource "aws_vpc_security_group_egress_rule" "ecs_instance_all_out" {
   security_group_id = aws_security_group.ecs_instance_sg.id
   description        = "Allow all outbound"

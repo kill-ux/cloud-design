@@ -15,3 +15,8 @@ variable "private_subnet_ids" {
   description = "Private subnets ids for autoscaling group"
   type        = list(string)
 }
+
+variable "public_subnet_ids" {
+  description = "Public subnets ids for autoscaling group just for test nginx"
+  type        = list(string)
+}

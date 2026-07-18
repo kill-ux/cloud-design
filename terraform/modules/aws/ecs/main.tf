@@ -13,6 +13,11 @@ data "aws_ssm_parameter" "ecs_ami" {
   name = "/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id"
 }
 
+resource "aws_key_pair" "my_key" {
+  key_name   = "my-ecs-key"
+  public_key = file(".keys/id_ecs.pub")
+}
+
 resource "aws_launch_template" "ecs_lt" {
   name_prefix   = "cloud-design-ecs-"
   image_id      = data.aws_ssm_parameter.ecs_ami.value
@@ -30,15 +35,17 @@ resource "aws_launch_template" "ecs_lt" {
     EOF
   )
 
+  key_name = aws_key_pair.my_key.key_name
+
   tags = { "Name" = "cloud-design-ecs-lt" }
 }
 
 resource "aws_autoscaling_group" "ecs_asg" {
   name                = "cloud-design-ecs-asg"
-  desired_capacity    = 1
-  min_size            = 1
+  desired_capacity    = 0
+  min_size            = 0
   max_size            = 1
-  vpc_zone_identifier = var.private_subnet_ids
+  vpc_zone_identifier = var.public_subnet_ids
 
   launch_template {
     id      = aws_launch_template.ecs_lt.id
@@ -49,6 +56,10 @@ resource "aws_autoscaling_group" "ecs_asg" {
     key                 = "Name"
     value               = "cloud-design-ecs-instance"
     propagate_at_launch = true
+  }
+
+  lifecycle {
+    ignore_changes = [ tag ]
   }
 }
 
@@ -83,10 +94,13 @@ resource "aws_ecs_task_definition" "nginx" {
   network_mode             = "bridge"
   cpu                      = "256"
   memory                   = "512"
-  container_definitions = jsonencode(
+  container_definitions = jsonencode([
     {
-      name  = "nginx-ctr"
-      image = "nginx:latest"
+      name      = "nginx-ctr"
+      image     = "nginx:latest"
+      cpu       = 256
+      memory    = 512
+      essential = true
       portMappings = [
         {
           containerPort = 80
@@ -95,12 +109,21 @@ resource "aws_ecs_task_definition" "nginx" {
         }
       ]
       environment = [
-        { name = "ENV_VAR" ,  value = "value" }
+        { name = "ENV_VAR", value = "value" }
       ]
-    }g
-  )
+    }
+  ])
 }
 
+resource "aws_ecs_service" "nginx_service" {
+  name = "nginx_service"
+  cluster = aws_ecs_cluster.cloud_design_cluster.id
+  task_definition = aws_ecs_task_definition.nginx.arn
+  desired_count = 0
+  force_new_deployment = true
+
+  depends_on = [ aws_ecs_cluster_capacity_providers.cloud_design_cp_assoc ]
+}
 
 # resource "aws_ecs_task_definition" "api_gateway" {
 #   family                   = "cloud-design-api-gateway"

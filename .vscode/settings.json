@@ -6,6 +6,7 @@
         "vpc": "Cloudflare",
         "alb": "Connection",
         "ecs": "App",
-        "ecr": "Database"
+        "ecr": "Database",
+        "iam": "Admin"
     }
 }
