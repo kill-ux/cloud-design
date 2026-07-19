@@ -1,5 +1,5 @@
 module "vpc" {
-  source = "./modules/aws/vpc"
+  source   = "./modules/aws/vpc"
   vpc_cidr = var.vpc_cidr
 }
 
@@ -8,9 +8,28 @@ module "security" {
   vpc_id = module.vpc.vpc_id
 }
 
-module "alb" {
-  source = "./modules/aws/alb"
-  alb_sg_id = module.security.alb_sg_id
-  public_subnet_ids = module.vpc.public_subnet_ids
-  vpc_id = module.vpc.vpc_id
+# module "alb" {
+#   source = "./modules/aws/alb"
+#   alb_sg_id = module.security.alb_sg_id
+#   public_subnet_ids = module.vpc.public_subnet_ids
+#   vpc_id = module.vpc.vpc_id
+# }
+
+module "ecr" {
+  source = "./modules/aws/ecr"
+}
+
+module "iam" {
+  source = "./modules/aws/iam"
+}
+
+module "ecs" {
+  source                    = "./modules/aws/ecs"
+  ecs_execution_role_arn    = module.iam.ecs_execution_role_arn
+  ecs_instance_profile_name = module.iam.ecs_instance_profile_name
+  ecs_instance_sg_id        = module.security.ecs_instance_sg_id
+  private_subnet_ids        = module.vpc.private_subnet_ids
+  public_subnet_ids         = module.vpc.public_subnet_ids
+  nginx_sd_1 = module.vpc.nginx_sd_1
+  nginx_sd_2 = module.vpc.nginx_sd_2
 }
