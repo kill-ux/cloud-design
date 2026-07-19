@@ -30,4 +30,6 @@ module "ecs" {
   ecs_instance_sg_id        = module.security.ecs_instance_sg_id
   private_subnet_ids        = module.vpc.private_subnet_ids
   public_subnet_ids         = module.vpc.public_subnet_ids
+  nginx_sd_1 = module.vpc.nginx_sd_1
+  nginx_sd_2 = module.vpc.nginx_sd_2
 }
