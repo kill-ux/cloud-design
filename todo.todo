@@ -2,3 +2,33 @@ setting {
   name = "containerInsights"
   value = "enabled"
 }
+
+Route 53
+
+
+Scale down EC2 instances to 0:
+
+aws autoscaling set-desired-capacity --auto-scaling-group-name cloud-design-ecs-asg --desired-capacity 0 --region eu-west-3
+
+Scale down ECS services to 0:
+aws ecs update-service --cluster cloud-design-cluster --service nginx_service_1 --desired-count 0 --region eu-west-3
+aws ecs update-service --cluster cloud-design-cluster --service nginx_service_2 --desired-count 0 --region eu-west-3
+
+
+aws autoscaling update-auto-scaling-group \
+  --auto-scaling-group-name cloud-design-ecs-asg \
+  --min-size 0 \
+  --region eu-west-3
+
+# Now set desired to 0
+aws autoscaling set-desired-capacity \
+  --auto-scaling-group-name cloud-design-ecs-asg \
+  --desired-capacity 0 \
+  --region eu-west-3
+
+
+
+Then to restart later:
+aws autoscaling set-desired-capacity --auto-scaling-group-name cloud-design-ecs-asg --desired-capacity 2 --region eu-west-3
+aws ecs update-service --cluster cloud-design-cluster --service nginx_service_1 --desired-count 1 --region eu-west-3
+aws ecs update-service --cluster cloud-design-cluster --service nginx_service_2 --desired-count 1 --region eu-west-3

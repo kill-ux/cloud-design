@@ -1,9 +1,16 @@
+
+
+
 resource "aws_ecs_cluster" "cloud_design_cluster" {
   name = "cloud-design-cluster"
 
   setting {
     name  = "containerInsights"
     value = "enabled"
+  }
+
+  service_connect_defaults {
+    namespace = var.service_discovery_namespace_arn
   }
 
   tags = { "Name" = "cloud-design-cluster" }
@@ -42,9 +49,9 @@ resource "aws_launch_template" "ecs_lt" {
 
 resource "aws_autoscaling_group" "ecs_asg" {
   name                = "cloud-design-ecs-asg"
-  desired_capacity    = 2 #0
-  min_size            = 2 #0
-  max_size            = 3 #0
+  desired_capacity    = 2
+  min_size            = 2
+  max_size            = 2
   vpc_zone_identifier = var.public_subnet_ids
 
   launch_template {
@@ -59,7 +66,7 @@ resource "aws_autoscaling_group" "ecs_asg" {
   }
 
   lifecycle {
-    ignore_changes = [ tag ]
+    ignore_changes = [tag]
   }
 }
 
@@ -88,12 +95,31 @@ resource "aws_ecs_cluster_capacity_providers" "cloud_design_cp_assoc" {
   }
 }
 
+# Data source to get EC2 instances in the ASG
+data "aws_instances" "ecs_instances" {
+  filter {
+    name   = "tag:aws:autoscaling:groupName"
+    values = [aws_autoscaling_group.ecs_asg.name]
+  }
+
+  depends_on = [aws_autoscaling_group.ecs_asg]
+}
+
+# CloudWatch Log Group for nginx tasks
+resource "aws_cloudwatch_log_group" "nginx_logs" {
+  name              = "/ecs/nginx"
+  retention_in_days = 7
+
+  tags = { "Name" = "nginx-ecs-logs" }
+}
+
 resource "aws_ecs_task_definition" "nginx" {
   family                   = "nginx"
   requires_compatibilities = ["EC2"]
   network_mode             = "awsvpc"
   cpu                      = "256"
   memory                   = "512"
+  execution_role_arn       = var.ecs_execution_role_arn
   container_definitions = jsonencode([
     {
       name      = "nginx-ctr"
@@ -103,6 +129,7 @@ resource "aws_ecs_task_definition" "nginx" {
       essential = true
       portMappings = [
         {
+          name          = "nginx"
           containerPort = 80
           protocol      = "tcp"
         }
@@ -110,47 +137,90 @@ resource "aws_ecs_task_definition" "nginx" {
       environment = [
         { name = "ENV_VAR", value = "value" }
       ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = "/ecs/nginx"
+          "awslogs-region"        = "eu-west-3"
+          "awslogs-stream-prefix" = "ecs"
+        }
+      }
     }
   ])
 }
 
 resource "aws_ecs_service" "nginx_1" {
-  name = "nginx_service_1"
-  cluster = aws_ecs_cluster.cloud_design_cluster.id
-  task_definition = aws_ecs_task_definition.nginx.arn
-  desired_count = 1 #0
-  force_new_deployment = true
+  name                                    = "nginx_service_1"
+  cluster                                 = aws_ecs_cluster.cloud_design_cluster.id
+  task_definition                         = aws_ecs_task_definition.nginx.arn
+  desired_count                           = 1
+  force_new_deployment                    = true
+  deployment_maximum_percent              = 100
+  deployment_minimum_healthy_percent      = 0
+  availability_zone_rebalancing           = "DISABLED"
+
+  capacity_provider_strategy {
+    capacity_provider = aws_ecs_capacity_provider.cloud_design_cp.name
+    weight            = 100
+    base              = 0
+  }
 
   network_configuration {
-    subnets = var.public_subnet_ids
-    security_groups = [ var.ecs_instance_sg_id ]
+    subnets         = var.public_subnet_ids
+    security_groups = [var.ecs_instance_sg_id]
   }
 
-  service_registries {
-    registry_arn = var.nginx_sd_1
+  service_connect_configuration {
+    enabled   = true
+    namespace = var.service_discovery_namespace_arn
+    service {
+      discovery_name = "nginx_1"
+      port_name      = "nginx"
+      client_alias {
+        port = 80
+        dns_name = "nginx_1"
+      }
+    }
   }
 
-  depends_on = [ aws_ecs_cluster_capacity_providers.cloud_design_cp_assoc ]
+  depends_on = [aws_ecs_cluster_capacity_providers.cloud_design_cp_assoc]
 }
 
 resource "aws_ecs_service" "nginx_2" {
-  name = "nginx_service_2"
-  cluster = aws_ecs_cluster.cloud_design_cluster.id
-  task_definition = aws_ecs_task_definition.nginx.arn
-  desired_count = 1 #0
-  force_new_deployment = true
+  name                                    = "nginx_service_2"
+  cluster                                 = aws_ecs_cluster.cloud_design_cluster.id
+  task_definition                         = aws_ecs_task_definition.nginx.arn
+  desired_count                           = 1
+  force_new_deployment                    = true
+  deployment_maximum_percent              = 100
+  deployment_minimum_healthy_percent      = 0
+  availability_zone_rebalancing           = "DISABLED"
+
+  capacity_provider_strategy {
+    capacity_provider = aws_ecs_capacity_provider.cloud_design_cp.name
+    weight            = 100
+    base              = 0
+  }
 
   network_configuration {
-    subnets = var.public_subnet_ids
-    security_groups = [ var.ecs_instance_sg_id ]
+    subnets         = var.public_subnet_ids
+    security_groups = [var.ecs_instance_sg_id]
   }
 
-  service_registries {
-    registry_arn = var.nginx_sd_2
+  service_connect_configuration {
+    enabled   = true
+    namespace = var.service_discovery_namespace_arn
+    service {
+      discovery_name = "nginx_2"
+      port_name      = "nginx"
+      client_alias {
+        port = 80
+        dns_name = "nginx_2"
+      }
+    }
   }
 
-
-  depends_on = [ aws_ecs_cluster_capacity_providers.cloud_design_cp_assoc ]
+  depends_on = [aws_ecs_cluster_capacity_providers.cloud_design_cp_assoc]
 }
 
 # resource "aws_ecs_task_definition" "api_gateway" {
