@@ -186,6 +186,15 @@ resource "aws_security_group" "ecs_instance_sg" {
   tags = { "Name" = "cloud-design-ecs-instance-sg" }
 }
 
+resource "aws_vpc_security_group_ingress_rule" "ecs_service_connect" {
+  security_group_id = aws_security_group.ecs_instance_sg.id
+  description       = "Allow Service Connect traffic between ECS services"
+  from_port         = 80
+  to_port           = 80
+  ip_protocol       = "tcp"
+  referenced_security_group_id = aws_security_group.ecs_instance_sg.id
+}
+
 resource "aws_vpc_security_group_ingress_rule" "ecs_instance_from_alb" {
   security_group_id            = aws_security_group.ecs_instance_sg.id
   description                  = "Allow traffic from ALB"

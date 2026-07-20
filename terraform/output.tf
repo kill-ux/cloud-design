@@ -47,3 +47,55 @@ output "rabbitmq_sg_id" {
   description = "Security group ID for RabbitMQ message queue"
   value       = module.security.rabbitmq_sg_id
 }
+
+# ========================================
+# SERVICE CONNECT OUTPUTS
+# ========================================
+
+output "ecs_cluster_name" {
+  description = "ECS Cluster name for Service Connect"
+  value       = module.ecs.ecs_cluster_name
+}
+
+output "ecs_cluster_arn" {
+  description = "ECS Cluster ARN"
+  value       = module.ecs.ecs_cluster_arn
+}
+
+output "service_discovery_namespace_arn" {
+  description = "Service Discovery HTTP Namespace ARN for Service Connect"
+  value       = module.ecs.service_discovery_namespace_arn
+}
+
+output "nginx_1_service_name" {
+  description = "Service name for nginx_1 - use this to access via Service Connect: nginx_1:80"
+  value       = module.ecs.nginx_1_service_name
+}
+
+output "nginx_2_service_name" {
+  description = "Service name for nginx_2 - use this to access via Service Connect: nginx_2:80"
+  value       = module.ecs.nginx_2_service_name
+}
+
+output "nginx_1_service_arn" {
+  description = "Service ARN for nginx_1"
+  value       = module.ecs.nginx_1_service_arn
+}
+
+output "nginx_2_service_arn" {
+  description = "Service ARN for nginx_2"
+  value       = module.ecs.nginx_2_service_arn
+}
+
+output "service_connect_dns_names" {
+  description = "DNS names to use for Service Connect discovery within the cluster"
+  value = {
+    nginx_1 = "nginx_1:80"
+    nginx_2 = "nginx_2:80"
+  }
+}
+
+output "ecs_instance_public_ips" {
+  description = "Public IPs of ECS EC2 instances - SSH into these to test Service Connect"
+  value       = module.ecs.ecs_instance_public_ips
+}

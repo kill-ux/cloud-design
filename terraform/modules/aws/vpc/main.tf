@@ -8,41 +8,51 @@ resource "aws_vpc" "cloud-design-vpc" {
   }
 }
 
-resource "aws_service_discovery_private_dns_namespace" "local" {
-  name        = "local"
+resource "aws_service_discovery_http_namespace" "local" {
+  name = "local"
   description = "Service Connect namespace"
-  vpc         = aws_vpc.cloud-design-vpc.id
+  tags = {
+    Name = "myapp-namespace"
+  } 
 }
 
-resource "aws_service_discovery_service" "nginx_sd_1" {
-  name         = "nginx-1-service"
-  dns_config {
-    namespace_id = aws_service_discovery_private_dns_namespace.local.id
-    dns_records {
-      ttl  = 10
-      type = "A"
-    }
 
-    routing_policy = "MULTIVALUE"
-  }
+# resource "aws_service_discovery_private_dns_namespace" "local" {
+#   name        = "local"
+#   description = "Service Connect namespace"
+#   vpc         = aws_vpc.cloud-design-vpc.id
+# }
 
-  health_check_custom_config {}
-}
 
-resource "aws_service_discovery_service" "nginx_sd_2" {
-  name         = "nginx-2-service"
-  dns_config {
-    namespace_id = aws_service_discovery_private_dns_namespace.local.id
-    dns_records {
-      ttl  = 10
-      type = "A"
-    }
+# resource "aws_service_discovery_service" "nginx_sd_1" {
+#   name         = "nginx-1-service"
+#   dns_config {
+#     namespace_id = aws_service_discovery_private_dns_namespace.local.id
+#     dns_records {
+#       ttl  = 10
+#       type = "A"
+#     }
 
-    routing_policy = "MULTIVALUE"
-  }
+#     routing_policy = "MULTIVALUE"
+#   }
 
-  health_check_custom_config {}
-}
+#   health_check_custom_config {}
+# }
+
+# resource "aws_service_discovery_service" "nginx_sd_2" {
+#   name         = "nginx-2-service"
+#   dns_config {
+#     namespace_id = aws_service_discovery_private_dns_namespace.local.id
+#     dns_records {
+#       ttl  = 10
+#       type = "A"
+#     }
+
+#     routing_policy = "MULTIVALUE"
+#   }
+
+#   health_check_custom_config {}
+# }
 data "aws_availability_zones" "available" {
   state = "available"
 }
