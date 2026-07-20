@@ -37,11 +37,6 @@ variable "memory" {
   default     = 512
 }
 
-variable "hostname" {
-  description = "Hostname of the container"
-  type = string
-}
-
 variable "execution_role_arn" {
   description = "ARN of ECS task execution role"
   type        = string

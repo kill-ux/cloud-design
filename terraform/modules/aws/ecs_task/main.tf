@@ -22,7 +22,6 @@ resource "aws_ecs_task_definition" "task" {
       cpu       = var.cpu
       memory    = var.memory
       essential = true
-      hostname  = var.hostname
       portMappings = [
         {
           name          = var.port_name
