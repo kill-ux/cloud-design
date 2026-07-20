@@ -52,14 +52,14 @@ output "rabbitmq_sg_id" {
 # SERVICE CONNECT OUTPUTS
 # ========================================
 
-output "ecs_cluster_name" {
+output "cluster_name" {
   description = "ECS Cluster name for Service Connect"
-  value       = module.ecs.ecs_cluster_name
+  value       = module.ecs.cluster_name
 }
 
-output "ecs_cluster_arn" {
+output "cluster_arn" {
   description = "ECS Cluster ARN"
-  value       = module.ecs.ecs_cluster_arn
+  value       = module.ecs.cluster_arn
 }
 
 output "service_discovery_namespace_arn" {
@@ -67,33 +67,33 @@ output "service_discovery_namespace_arn" {
   value       = module.ecs.service_discovery_namespace_arn
 }
 
-output "nginx_1_service_name" {
-  description = "Service name for nginx_1 - use this to access via Service Connect: nginx_1:80"
-  value       = module.ecs.nginx_1_service_name
-}
+# output "nginx_1_service_name" {
+#   description = "Service name for nginx_1 - use this to access via Service Connect: nginx_1:80"
+#   value       = module.ecs.nginx_1_service_name
+# }
 
-output "nginx_2_service_name" {
-  description = "Service name for nginx_2 - use this to access via Service Connect: nginx_2:80"
-  value       = module.ecs.nginx_2_service_name
-}
+# output "nginx_2_service_name" {
+#   description = "Service name for nginx_2 - use this to access via Service Connect: nginx_2:80"
+#   value       = module.ecs.nginx_2_service_name
+# }
 
-output "nginx_1_service_arn" {
-  description = "Service ARN for nginx_1"
-  value       = module.ecs.nginx_1_service_arn
-}
+# output "nginx_1_service_arn" {
+#   description = "Service ARN for nginx_1"
+#   value       = module.ecs.nginx_1_service_arn
+# }
 
-output "nginx_2_service_arn" {
-  description = "Service ARN for nginx_2"
-  value       = module.ecs.nginx_2_service_arn
-}
+# output "nginx_2_service_arn" {
+#   description = "Service ARN for nginx_2"
+#   value       = module.ecs.nginx_2_service_arn
+# }
 
-output "service_connect_dns_names" {
-  description = "DNS names to use for Service Connect discovery within the cluster"
-  value = {
-    nginx_1 = "nginx_1:80"
-    nginx_2 = "nginx_2:80"
-  }
-}
+# output "service_connect_dns_names" {
+#   description = "DNS names to use for Service Connect discovery within the cluster"
+#   value = {
+#     nginx_1 = "nginx_1:80"
+#     nginx_2 = "nginx_2:80"
+#   }
+# }
 
 output "ecs_instance_public_ips" {
   description = "Public IPs of ECS EC2 instances - SSH into these to test Service Connect"
