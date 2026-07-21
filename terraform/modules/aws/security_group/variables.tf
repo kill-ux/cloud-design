@@ -19,10 +19,10 @@ variable "ingress_rules" {
     description                  = string
     from_port                    = number
     to_port                      = number
-    protocol                     = string
+    protocol                     = optional(string, "tcp")
     cidr_ipv4                    = optional(string)
     referenced_security_group_id = optional(string)
-    self                         = optional(bool ,false)
+    self                         = optional(bool, false)
   }))
   default = []
 }
@@ -31,15 +31,13 @@ variable "egress_rules" {
   description = "List of egress rules"
   type = list(object({
     description = string
-    from_port   = number
-    to_port     = number
-    protocol    = string
+    from_port   = optional(number)
+    to_port     = optional(number)
+    protocol    = optional(string, "tcp")
     cidr_ipv4   = string
   }))
   default = [{
     description = "Allow all outbound"
-    from_port   = 0
-    to_port     = 0
     protocol    = "-1"
     cidr_ipv4   = "0.0.0.0/0"
   }]

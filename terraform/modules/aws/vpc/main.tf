@@ -8,12 +8,13 @@ resource "aws_vpc" "cloud-design-vpc" {
   }
 }
 
-resource "aws_service_discovery_http_namespace" "local" {
-  name = "local"
+resource "aws_service_discovery_private_dns_namespace" "local" {
+  name        = "local"
   description = "Service Connect namespace"
+  vpc         = aws_vpc.cloud-design-vpc.id
   tags = {
     Name = "myapp-namespace"
-  } 
+  }
 }
 
 

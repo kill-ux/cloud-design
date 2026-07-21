@@ -32,3 +32,5 @@ Then to restart later:
 aws autoscaling set-desired-capacity --auto-scaling-group-name cloud-design-ecs-asg --desired-capacity 2 --region eu-west-3
 aws ecs update-service --cluster cloud-design-cluster --service nginx_service_1 --desired-count 1 --region eu-west-3
 aws ecs update-service --cluster cloud-design-cluster --service nginx_service_2 --desired-count 1 --region eu-west-3
+
+

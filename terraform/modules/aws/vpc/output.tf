@@ -3,11 +3,11 @@ output "vpc_id" {
 }
 
 output "public_subnet_ids" {
-  value = [for s in aws_subnet.public: s.id ]
+  value = [for s in aws_subnet.public : s.id]
 }
 
 output "private_subnet_ids" {
-  value = [for s in aws_subnet.private: s.id ]
+  value = [for s in aws_subnet.private : s.id]
 }
 
 # output "nginx_sd_1" {
@@ -23,5 +23,5 @@ output "private_subnet_ids" {
 # }
 
 output "service_discovery_namespace_arn" {
-  value = aws_service_discovery_http_namespace.local.arn
+  value = aws_service_discovery_private_dns_namespace.local.arn
 }
