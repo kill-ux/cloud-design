@@ -84,7 +84,6 @@ resource "aws_vpc_endpoint" "ecr_api" {
   tags = { "Name" = "cloud-design-ecr-api-endpoint" }
 }
 
-
 resource "aws_vpc_endpoint" "ecr_dkr" {
   vpc_id              = aws_vpc.cloud-design-vpc.id
   service_name        = "com.amazonaws.${var.aws_region}.ecr.dkr"
@@ -95,3 +94,13 @@ resource "aws_vpc_endpoint" "ecr_dkr" {
 
   tags = { "Name" = "cloud-design-ecr-dkr-endpoint" }
 }
+
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id            = aws_vpc.cloud-design-vpc.id
+  service_name      = "com.amazonaws.${var.aws_region}.s3"
+  vpc_endpoint_type = "Gateway"
+  route_table_ids   = [aws_route_table.rt.id]
+
+  tags = { "Name" = "cloud-design-s3-endpoint" }
+}
+

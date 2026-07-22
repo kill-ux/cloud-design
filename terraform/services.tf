@@ -56,7 +56,7 @@ module "api_gateway_service" {
   execution_role_arn              = module.iam.ecs_execution_role_arn
   service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
 
-  subnets         = module.vpc.public_subnet_ids
+  subnets         = module.vpc.private_subnet_ids
   security_groups = [module.gateway_sg.id]
   cpu             = 128
   memory          = 256
@@ -108,351 +108,351 @@ module "api_gateway_service" {
 }
 
 # ==================== RabbitMQ Security Group ====================
-module "rabbitmq_sg" {
-  source = "./modules/aws/security_group"
+# module "rabbitmq_sg" {
+#   source = "./modules/aws/security_group"
 
-  name        = "rabbitmq_sg"
-  description = "Allow traffic from applications to RabbitMQ"
-  vpc_id      = module.vpc.vpc_id
+#   name        = "rabbitmq_sg"
+#   description = "Allow traffic from applications to RabbitMQ"
+#   vpc_id      = module.vpc.vpc_id
 
-  ingress_rules = [
-    {
-      description                  = "Allow from API gateway"
-      from_port                    = 5672
-      to_port                      = 5672
-      protocol                     = "tcp"
-      referenced_security_group_id = module.gateway_sg.id
-    },
-    {
-      description                  = "Allow from billing"
-      from_port                    = 5672
-      to_port                      = 5672
-      protocol                     = "tcp"
-      referenced_security_group_id = module.billing_sg.id
-    }
-  ]
+#   ingress_rules = [
+#     {
+#       description                  = "Allow from API gateway"
+#       from_port                    = 5672
+#       to_port                      = 5672
+#       protocol                     = "tcp"
+#       referenced_security_group_id = module.gateway_sg.id
+#     },
+#     {
+#       description                  = "Allow from billing"
+#       from_port                    = 5672
+#       to_port                      = 5672
+#       protocol                     = "tcp"
+#       referenced_security_group_id = module.billing_sg.id
+#     }
+#   ]
 
-  tags = { "Component" = "message-broker" }
-}
-
-
-# RabbitMQ
-module "rabbitmq_service" {
-  source = "./modules/aws/ecs_task"
-
-  task_name       = "rabbitmq"
-  container_image = "${var.ecr_registry}/rabbitmq:1.0.0"
-  container_port  = 5672
-  port_name       = "amqp"
-  discovery_name  = "rabbitmq"
-  dns_name        = "rabbitmq"
+#   tags = { "Component" = "message-broker" }
+# }
 
 
-  cluster_id                      = module.ecs.cluster_id
-  cluster_name                    = module.ecs.cluster_name
-  capacity_provider_name          = module.ecs.capacity_provider_name
-  execution_role_arn              = module.iam.ecs_execution_role_arn
-  service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
+# # RabbitMQ
+# module "rabbitmq_service" {
+#   source = "./modules/aws/ecs_task"
 
-  subnets         = module.vpc.public_subnet_ids
-  security_groups = [module.rabbitmq_sg.id]
-
-  cpu    = 128
-  memory = 256
-
-  environment_variables = [
-    {
-      name  = "RABBITMQ_USER"
-      value = var.rabbitmq_user
-    },
-    {
-      name  = "RABBITMQ_PASS"
-      value = var.rabbitmq_password
-    }
-  ]
-}
-
-# ==================== Inventory App Security Group ====================
-module "inventory_sg" {
-  source = "./modules/aws/security_group"
-
-  name        = "inventory_sg"
-  description = "Allow traffic from API gateway to inventory app"
-  vpc_id      = module.vpc.vpc_id
-
-  ingress_rules = [
-    {
-      description                  = "Allow traffic from API gateway"
-      from_port                    = 8080
-      protocol                     = "tcp"
-      to_port                      = 8080
-      referenced_security_group_id = module.gateway_sg.id
-    }
-  ]
-
-  tags = { "Component" = "inventory" }
-}
-
-module "inventory_service" {
-  source = "./modules/aws/ecs_task"
-
-  task_name       = "inventory"
-  container_image = "${var.ecr_registry}/inventory-app:1.0.0"
-  container_port  = 8080
-  port_name       = "inventory"
-  discovery_name  = "inventory"
-  dns_name        = "inventory"
-
-  cluster_id                      = module.ecs.cluster_id
-  cluster_name                    = module.ecs.cluster_name
-  capacity_provider_name          = module.ecs.capacity_provider_name
-  execution_role_arn              = module.iam.ecs_execution_role_arn
-  service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
-
-  subnets         = module.vpc.public_subnet_ids
-  security_groups = [module.inventory_sg.id]
-
-  cpu    = 128
-  memory = 256
-
-  environment_variables = [
-    {
-      name  = "INVENTORY_APP_PORT"
-      value = "8080"
-    },
-    {
-      name  = "INVENTORY_DB_HOST"
-      value = module.inventory_db_service.discovery_name
-    },
-    {
-      name  = "INVENTORY_DB_PORT"
-      value = "5432"
-    },
-    {
-      name  = "INVENTORY_DB_USER"
-      value = var.inventory_db_user
-    },
-    {
-      name  = "INVENTORY_DB_PASS"
-      value = var.inventory_db_password
-    },
-    {
-      name  = "INVENTORY_DB_NAME"
-      value = var.inventory_db_name
-    }
-  ]
-}
-
-# ==================== Inventory DB Security Group ====================
-module "inventory_db_sg" {
-  source = "./modules/aws/security_group"
-
-  name        = "inventory_db_sg"
-  description = "Allow traffic from inventory app to database"
-  vpc_id      = module.vpc.vpc_id
-
-  ingress_rules = [
-    {
-      description                  = "Allow from inventory app"
-      from_port                    = 5432
-      to_port                      = 5432
-      protocol                     = "tcp"
-      referenced_security_group_id = module.inventory_sg.id
-    }
-  ]
-
-  tags = { "Component" = "database" }
-}
-
-module "inventory_db_service" {
-  source = "./modules/aws/ecs_task"
-
-  task_name       = "inventory-db"
-  container_image = "${var.ecr_registry}/postgres-db:1.0.0"
-  container_port  = 5432
-  port_name       = "inventory_db"
-  discovery_name  = "inventory_db"
-  dns_name        = "inventory_db"
-
-  cluster_id                      = module.ecs.cluster_id
-  cluster_name                    = module.ecs.cluster_name
-  capacity_provider_name          = module.ecs.capacity_provider_name
-  execution_role_arn              = module.iam.ecs_execution_role_arn
-  service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
-
-  subnets         = module.vpc.public_subnet_ids
-  security_groups = [module.inventory_db_sg.id]
-
-  cpu    = 128
-  memory = 256
+#   task_name       = "rabbitmq"
+#   container_image = "${var.ecr_registry}/rabbitmq:1.0.0"
+#   container_port  = 5672
+#   port_name       = "amqp"
+#   discovery_name  = "rabbitmq"
+#   dns_name        = "rabbitmq"
 
 
-  environment_variables = [
-    {
-      name  = "DB_USER"
-      value = var.inventory_db_user
-    },
-    {
-      name  = "DB_PASS"
-      value = var.inventory_db_password
-    },
-    {
-      name  = "DB_NAME"
-      value = var.inventory_db_name
-    }
-  ]
+#   cluster_id                      = module.ecs.cluster_id
+#   cluster_name                    = module.ecs.cluster_name
+#   capacity_provider_name          = module.ecs.capacity_provider_name
+#   execution_role_arn              = module.iam.ecs_execution_role_arn
+#   service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
 
-}
+#   subnets         = module.vpc.private_subnet_ids
+#   security_groups = [module.rabbitmq_sg.id]
 
-# ==================== Billing App Security Group ====================
-module "billing_sg" {
-  source = "./modules/aws/security_group"
+#   cpu    = 128
+#   memory = 256
 
-  name        = "billing_sg"
-  description = "Allow traffic from API gateway to billing app"
-  vpc_id      = module.vpc.vpc_id
+#   environment_variables = [
+#     {
+#       name  = "RABBITMQ_USER"
+#       value = var.rabbitmq_user
+#     },
+#     {
+#       name  = "RABBITMQ_PASS"
+#       value = var.rabbitmq_password
+#     }
+#   ]
+# }
 
-  ingress_rules = [
-    {
-      description                  = "Allow traffic from API gateway"
-      from_port                    = 8080
-      protocol                     = "tcp"
-      to_port                      = 8080
-      referenced_security_group_id = module.gateway_sg.id
-    }
-  ]
+# # ==================== Inventory App Security Group ====================
+# module "inventory_sg" {
+#   source = "./modules/aws/security_group"
 
-  tags = { "Component" = "billing" }
-}
+#   name        = "inventory_sg"
+#   description = "Allow traffic from API gateway to inventory app"
+#   vpc_id      = module.vpc.vpc_id
 
-module "billing_service" {
-  source = "./modules/aws/ecs_task"
+#   ingress_rules = [
+#     {
+#       description                  = "Allow traffic from API gateway"
+#       from_port                    = 8080
+#       protocol                     = "tcp"
+#       to_port                      = 8080
+#       referenced_security_group_id = module.gateway_sg.id
+#     }
+#   ]
 
-  task_name       = "billing"
-  container_image = "${var.ecr_registry}/billing-app:1.0.0"
-  container_port  = 8080
-  port_name       = "billing"
-  discovery_name  = "billing"
-  dns_name        = "billing"
+#   tags = { "Component" = "inventory" }
+# }
 
-  cluster_id                      = module.ecs.cluster_id
-  cluster_name                    = module.ecs.cluster_name
-  capacity_provider_name          = module.ecs.capacity_provider_name
-  execution_role_arn              = module.iam.ecs_execution_role_arn
-  service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
+# module "inventory_service" {
+#   source = "./modules/aws/ecs_task"
 
-  subnets         = module.vpc.public_subnet_ids
-  security_groups = [module.billing_sg.id]
+#   task_name       = "inventory"
+#   container_image = "${var.ecr_registry}/inventory-app:1.0.0"
+#   container_port  = 8080
+#   port_name       = "inventory"
+#   discovery_name  = "inventory"
+#   dns_name        = "inventory"
 
-  cpu    = 128
-  memory = 256
+#   cluster_id                      = module.ecs.cluster_id
+#   cluster_name                    = module.ecs.cluster_name
+#   capacity_provider_name          = module.ecs.capacity_provider_name
+#   execution_role_arn              = module.iam.ecs_execution_role_arn
+#   service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
 
-  environment_variables = [
-    {
-      name  = "BILLING_APP_PORT"
-      value = "8080"
-    },
-    {
-      name  = "BILLING_DB_HOST"
-      value = "billing_db"
-    },
-    {
-      name  = "BILLING_DB_PORT"
-      value = "5432"
-    },
-    {
-      name  = "BILLING_DB_USER"
-      value = var.billing_db_user
-    },
-    {
-      name  = "BILLING_DB_PASS"
-      value = var.billing_db_password
-    },
-    {
-      name  = "BILLING_DB_NAME"
-      value = var.billing_db_name
-    },
-    {
-      name  = "RABBITMQ_HOST"
-      value = "rabbitmq"
-    },
-    {
-      name  = "RABBITMQ_PORT"
-      value = "5672"
-    },
-    {
-      name  = "RABBITMQ_QUEUE"
-      value = "billing-queue"
-    },
-    {
-      name  = "RABBITMQ_USER"
-      value = var.rabbitmq_user
-    },
-    {
-      name  = "RABBITMQ_PASS"
-      value = var.rabbitmq_password
-    }
-  ]
-}
+#   subnets         = module.vpc.private_subnet_ids
+#   security_groups = [module.inventory_sg.id]
 
-# ==================== Billing DB Security Group ====================
-module "billing_db_sg" {
-  source = "./modules/aws/security_group"
+#   cpu    = 128
+#   memory = 256
 
-  name        = "billing_db_sg"
-  description = "Allow traffic from billing app to database"
-  vpc_id      = module.vpc.vpc_id
+#   environment_variables = [
+#     {
+#       name  = "INVENTORY_APP_PORT"
+#       value = "8080"
+#     },
+#     {
+#       name  = "INVENTORY_DB_HOST"
+#       value = module.inventory_db_service.discovery_name
+#     },
+#     {
+#       name  = "INVENTORY_DB_PORT"
+#       value = "5432"
+#     },
+#     {
+#       name  = "INVENTORY_DB_USER"
+#       value = var.inventory_db_user
+#     },
+#     {
+#       name  = "INVENTORY_DB_PASS"
+#       value = var.inventory_db_password
+#     },
+#     {
+#       name  = "INVENTORY_DB_NAME"
+#       value = var.inventory_db_name
+#     }
+#   ]
+# }
 
-  ingress_rules = [
-    {
-      description                  = "Allow from billing app"
-      from_port                    = 5432
-      to_port                      = 5432
-      protocol                     = "tcp"
-      referenced_security_group_id = module.billing_sg.id
-    }
-  ]
+# # ==================== Inventory DB Security Group ====================
+# module "inventory_db_sg" {
+#   source = "./modules/aws/security_group"
 
-  tags = { "Component" = "database" }
-}
+#   name        = "inventory_db_sg"
+#   description = "Allow traffic from inventory app to database"
+#   vpc_id      = module.vpc.vpc_id
 
-module "billing_db_service" {
-  source = "./modules/aws/ecs_task"
+#   ingress_rules = [
+#     {
+#       description                  = "Allow from inventory app"
+#       from_port                    = 5432
+#       to_port                      = 5432
+#       protocol                     = "tcp"
+#       referenced_security_group_id = module.inventory_sg.id
+#     }
+#   ]
 
-  task_name       = "billing-db"
-  container_image = "${var.ecr_registry}/postgres-db:1.0.0"
-  container_port  = 5432
-  port_name       = "billing_db"
-  discovery_name  = "billing_db"
-  dns_name        = "billing_db"
+#   tags = { "Component" = "database" }
+# }
 
-  cluster_id                      = module.ecs.cluster_id
-  cluster_name                    = module.ecs.cluster_name
-  capacity_provider_name          = module.ecs.capacity_provider_name
-  execution_role_arn              = module.iam.ecs_execution_role_arn
-  service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
+# module "inventory_db_service" {
+#   source = "./modules/aws/ecs_task"
 
-  subnets         = module.vpc.public_subnet_ids
-  security_groups = [module.billing_db_sg.id]
+#   task_name       = "inventory-db"
+#   container_image = "${var.ecr_registry}/postgres-db:1.0.0"
+#   container_port  = 5432
+#   port_name       = "inventory_db"
+#   discovery_name  = "inventory_db"
+#   dns_name        = "inventory_db"
 
-  cpu    = 128
-  memory = 256
+#   cluster_id                      = module.ecs.cluster_id
+#   cluster_name                    = module.ecs.cluster_name
+#   capacity_provider_name          = module.ecs.capacity_provider_name
+#   execution_role_arn              = module.iam.ecs_execution_role_arn
+#   service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
 
-  environment_variables = [
-    {
-      name  = "DB_USER"
-      value = var.billing_db_user
-    },
-    {
-      name  = "DB_PASS"
-      value = var.billing_db_password
-    },
-    {
-      name  = "DB_NAME"
-      value = var.billing_db_name
-    }
-  ]
-}
+#   subnets         = module.vpc.private_subnet_ids
+#   security_groups = [module.inventory_db_sg.id]
+
+#   cpu    = 128
+#   memory = 256
+
+
+#   environment_variables = [
+#     {
+#       name  = "DB_USER"
+#       value = var.inventory_db_user
+#     },
+#     {
+#       name  = "DB_PASS"
+#       value = var.inventory_db_password
+#     },
+#     {
+#       name  = "DB_NAME"
+#       value = var.inventory_db_name
+#     }
+#   ]
+
+# }
+
+# # ==================== Billing App Security Group ====================
+# module "billing_sg" {
+#   source = "./modules/aws/security_group"
+
+#   name        = "billing_sg"
+#   description = "Allow traffic from API gateway to billing app"
+#   vpc_id      = module.vpc.vpc_id
+
+#   ingress_rules = [
+#     {
+#       description                  = "Allow traffic from API gateway"
+#       from_port                    = 8080
+#       protocol                     = "tcp"
+#       to_port                      = 8080
+#       referenced_security_group_id = module.gateway_sg.id
+#     }
+#   ]
+
+#   tags = { "Component" = "billing" }
+# }
+
+# module "billing_service" {
+#   source = "./modules/aws/ecs_task"
+
+#   task_name       = "billing"
+#   container_image = "${var.ecr_registry}/billing-app:1.0.0"
+#   container_port  = 8080
+#   port_name       = "billing"
+#   discovery_name  = "billing"
+#   dns_name        = "billing"
+
+#   cluster_id                      = module.ecs.cluster_id
+#   cluster_name                    = module.ecs.cluster_name
+#   capacity_provider_name          = module.ecs.capacity_provider_name
+#   execution_role_arn              = module.iam.ecs_execution_role_arn
+#   service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
+
+#   subnets         = module.vpc.private_subnet_ids
+#   security_groups = [module.billing_sg.id]
+
+#   cpu    = 128
+#   memory = 256
+
+#   environment_variables = [
+#     {
+#       name  = "BILLING_APP_PORT"
+#       value = "8080"
+#     },
+#     {
+#       name  = "BILLING_DB_HOST"
+#       value = "billing_db"
+#     },
+#     {
+#       name  = "BILLING_DB_PORT"
+#       value = "5432"
+#     },
+#     {
+#       name  = "BILLING_DB_USER"
+#       value = var.billing_db_user
+#     },
+#     {
+#       name  = "BILLING_DB_PASS"
+#       value = var.billing_db_password
+#     },
+#     {
+#       name  = "BILLING_DB_NAME"
+#       value = var.billing_db_name
+#     },
+#     {
+#       name  = "RABBITMQ_HOST"
+#       value = "rabbitmq"
+#     },
+#     {
+#       name  = "RABBITMQ_PORT"
+#       value = "5672"
+#     },
+#     {
+#       name  = "RABBITMQ_QUEUE"
+#       value = "billing-queue"
+#     },
+#     {
+#       name  = "RABBITMQ_USER"
+#       value = var.rabbitmq_user
+#     },
+#     {
+#       name  = "RABBITMQ_PASS"
+#       value = var.rabbitmq_password
+#     }
+#   ]
+# }
+
+# # ==================== Billing DB Security Group ====================
+# module "billing_db_sg" {
+#   source = "./modules/aws/security_group"
+
+#   name        = "billing_db_sg"
+#   description = "Allow traffic from billing app to database"
+#   vpc_id      = module.vpc.vpc_id
+
+#   ingress_rules = [
+#     {
+#       description                  = "Allow from billing app"
+#       from_port                    = 5432
+#       to_port                      = 5432
+#       protocol                     = "tcp"
+#       referenced_security_group_id = module.billing_sg.id
+#     }
+#   ]
+
+#   tags = { "Component" = "database" }
+# }
+
+# module "billing_db_service" {
+#   source = "./modules/aws/ecs_task"
+
+#   task_name       = "billing-db"
+#   container_image = "${var.ecr_registry}/postgres-db:1.0.0"
+#   container_port  = 5432
+#   port_name       = "billing_db"
+#   discovery_name  = "billing_db"
+#   dns_name        = "billing_db"
+
+#   cluster_id                      = module.ecs.cluster_id
+#   cluster_name                    = module.ecs.cluster_name
+#   capacity_provider_name          = module.ecs.capacity_provider_name
+#   execution_role_arn              = module.iam.ecs_execution_role_arn
+#   service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
+
+#   subnets         = module.vpc.private_subnet_ids
+#   security_groups = [module.billing_db_sg.id]
+
+#   cpu    = 128
+#   memory = 256
+
+#   environment_variables = [
+#     {
+#       name  = "DB_USER"
+#       value = var.billing_db_user
+#     },
+#     {
+#       name  = "DB_PASS"
+#       value = var.billing_db_password
+#     },
+#     {
+#       name  = "DB_NAME"
+#       value = var.billing_db_name
+#     }
+#   ]
+# }
 
 
 # ===== ALB Security Group =====
@@ -504,13 +504,13 @@ module "ecs_instance_sg" {
       protocol                     = "tcp"
       referenced_security_group_id = module.alb_sg.id
     },
-    {
-      description = "TEMP: Allow SSH for debugging"
-      from_port   = 22
-      to_port     = 22
-      protocol    = "tcp"
-      cidr_ipv4   = "0.0.0.0/0"
-    }
+    # {
+    #   description = "TEMP: Allow SSH for debugging"
+    #   from_port   = 22
+    #   to_port     = 22
+    #   protocol    = "tcp"
+    #   cidr_ipv4   = "0.0.0.0/0"
+    # }
   ]
 
   tags = { "Component" = "compute" }
