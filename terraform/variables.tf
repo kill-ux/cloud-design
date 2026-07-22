@@ -23,7 +23,6 @@ variable "vpc_cidr" {
 variable "ecr_registry" {
   description = "ECR registry URL"
   type        = string
-  default     = "969209892845.dkr.ecr.eu-west-3.amazonaws.com"
 }
 
 

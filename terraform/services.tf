@@ -1,3 +1,23 @@
+module "vpc_endpoints_sg" {
+  source = "./modules/aws/security_group"
+
+  name        = "vpc_endpoints_sg"
+  description = "Allow HTTPS from private subnets to VPC endpoints"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress_rules = [
+    {
+      description = "Allow HTTPS from VPC"
+      protocol    = "tcp"
+      from_port   = 443
+      to_port     = 443
+      cidr_ipv4   = var.vpc_cidr
+    }
+  ]
+
+  tags = { "Name" : "vpc_endpoints_sg" }
+}
+
 
 # ==================== API Gateway Security Group ====================
 module "gateway_sg" {

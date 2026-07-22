@@ -1,6 +1,8 @@
 module "vpc" {
-  source   = "./modules/aws/vpc"
-  vpc_cidr = var.vpc_cidr
+  source              = "./modules/aws/vpc"
+  vpc_cidr            = var.vpc_cidr
+  aws_region          = var.aws_region
+  vpc_endpoints_sg_id = module.vpc_endpoints_sg.id
 }
 
 # module "security" {

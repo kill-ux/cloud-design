@@ -1,4 +1,20 @@
-aws_access_key_id       = ""
-aws_secret_access_key   = ""
-aws_region              = ""
-vpc_cidr                = ""
+aws_access_key_id     = ""
+aws_secret_access_key = ""
+aws_region            = "eu-west-3"
+vpc_cidr              = "10.0.0.0/16"
+
+# ===== RabbitMQ Configuration =====
+rabbitmq_user         = "fake_rabbit"
+rabbitmq_password     = "fake_password"
+
+# ===== Inventory Database Configuration =====
+inventory_db_user     = "fake_inventory_user"
+inventory_db_password = "fake_inventory_pass"
+inventory_db_name     = "fake_inventory_db"
+
+# ===== Billing Database Configuration =====
+billing_db_user       = "fake_billing_user"
+billing_db_password   = "fake_billing_pass"
+billing_db_name       = "fake_billing_db"
+
+ecr_registry          = "<user_id>.dkr.ecr.eu-west-3.amazonaws.com"
