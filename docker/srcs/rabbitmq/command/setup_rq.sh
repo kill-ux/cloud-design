@@ -4,7 +4,11 @@ rabbitmq-server &
 TEMP_PID=$!
 
 echo "Waiting for RabbitMQ to become fully responsive..."
-rabbitmqctl wait --timeout 15 /var/lib/rabbitmq/mnesia/rabbit@$HOSTNAME.pid
+
+until rabbitmqctl await_startup >/dev/null 2>&1
+do
+    sleep 2
+done
 
 rabbitmqctl add_user $RABBITMQ_USER $RABBITMQ_PASS || true
 rabbitmqctl set_permissions -p / $RABBITMQ_USER ".*" ".*" ".*" || true

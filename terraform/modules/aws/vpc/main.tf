@@ -8,51 +8,15 @@ resource "aws_vpc" "cloud-design-vpc" {
   }
 }
 
-resource "aws_service_discovery_http_namespace" "local" {
-  name = "local"
+resource "aws_service_discovery_private_dns_namespace" "local" {
+  name        = "local"
   description = "Service Connect namespace"
+  vpc         = aws_vpc.cloud-design-vpc.id
   tags = {
     Name = "myapp-namespace"
-  } 
+  }
 }
 
-
-# resource "aws_service_discovery_private_dns_namespace" "local" {
-#   name        = "local"
-#   description = "Service Connect namespace"
-#   vpc         = aws_vpc.cloud-design-vpc.id
-# }
-
-
-# resource "aws_service_discovery_service" "nginx_sd_1" {
-#   name         = "nginx-1-service"
-#   dns_config {
-#     namespace_id = aws_service_discovery_private_dns_namespace.local.id
-#     dns_records {
-#       ttl  = 10
-#       type = "A"
-#     }
-
-#     routing_policy = "MULTIVALUE"
-#   }
-
-#   health_check_custom_config {}
-# }
-
-# resource "aws_service_discovery_service" "nginx_sd_2" {
-#   name         = "nginx-2-service"
-#   dns_config {
-#     namespace_id = aws_service_discovery_private_dns_namespace.local.id
-#     dns_records {
-#       ttl  = 10
-#       type = "A"
-#     }
-
-#     routing_policy = "MULTIVALUE"
-#   }
-
-#   health_check_custom_config {}
-# }
 data "aws_availability_zones" "available" {
   state = "available"
 }
@@ -107,3 +71,36 @@ resource "aws_route_table_association" "rt_association" {
   route_table_id = aws_route_table.rt.id
   subnet_id      = each.value.id
 }
+
+
+resource "aws_vpc_endpoint" "ecr_api" {
+  vpc_id              = aws_vpc.cloud-design-vpc.id
+  service_name        = "com.amazonaws.${var.aws_region}.ecr.api"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = [for s in aws_subnet.private : s.id]
+  security_group_ids  = [var.vpc_endpoints_sg_id]
+  private_dns_enabled = true
+
+  tags = { "Name" = "cloud-design-ecr-api-endpoint" }
+}
+
+resource "aws_vpc_endpoint" "ecr_dkr" {
+  vpc_id              = aws_vpc.cloud-design-vpc.id
+  service_name        = "com.amazonaws.${var.aws_region}.ecr.dkr"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = [for s in aws_subnet.private : s.id]
+  security_group_ids  = [var.vpc_endpoints_sg_id]
+  private_dns_enabled = true
+
+  tags = { "Name" = "cloud-design-ecr-dkr-endpoint" }
+}
+
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id            = aws_vpc.cloud-design-vpc.id
+  service_name      = "com.amazonaws.${var.aws_region}.s3"
+  vpc_endpoint_type = "Gateway"
+  route_table_ids   = [aws_route_table.rt.id]
+
+  tags = { "Name" = "cloud-design-s3-endpoint" }
+}
+

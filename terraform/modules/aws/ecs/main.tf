@@ -49,10 +49,10 @@ resource "aws_launch_template" "ecs_lt" {
 
 resource "aws_autoscaling_group" "ecs_asg" {
   name                = "cloud-design-ecs-asg"
-  desired_capacity    = 2
-  min_size            = 2
-  max_size            = 2
-  vpc_zone_identifier = var.public_subnet_ids
+  desired_capacity    = 1
+  min_size            = 1
+  max_size            = 1
+  vpc_zone_identifier = var.private_subnet_ids
 
   launch_template {
     id      = aws_launch_template.ecs_lt.id

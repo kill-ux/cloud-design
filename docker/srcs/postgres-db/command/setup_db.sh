@@ -11,10 +11,10 @@ fi
 PG_VERSION=$(ls /usr/lib/postgresql | grep -E '^[0-9]+$')
 PG_BIN="/usr/lib/postgresql/$PG_VERSION/bin"
 
-echo "check fils inside $PGDATA"
-ls $PGDATA
+echo "check files inside $PGDATA"
 
 if [ ! -d "$PGDATA/base" ]; then
+    echo "Initializing PostgreSQL database cluster..."
     mkdir -p "$PGDATA"
     chown -R postgres:postgres "$PGDATA"
     chmod 700 "$PGDATA"

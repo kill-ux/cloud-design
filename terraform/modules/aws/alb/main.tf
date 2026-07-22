@@ -31,11 +31,11 @@ resource "aws_lb_target_group" "cloud_design_gateway_tg" {
 
 resource "aws_lb_listener" "name" {
   load_balancer_arn = aws_lb.cloud_design_alb.arn
-  port = 80
-  protocol = "HTTP"
+  port              = 80
+  protocol          = "HTTP"
 
   default_action {
-    type = "forward"
+    type             = "forward"
     target_group_arn = aws_lb_target_group.cloud_design_gateway_tg.arn
   }
 

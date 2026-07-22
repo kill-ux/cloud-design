@@ -8,6 +8,7 @@ variable "task_name" {
 variable "container_name" {
   description = "Name of the container"
   type        = string
+  default = ""
 }
 
 variable "container_image" {
@@ -35,11 +36,6 @@ variable "memory" {
   description = "Memory in MB (512, 1024, 2048, etc)"
   type        = number
   default     = 512
-}
-
-variable "hostname" {
-  description = "Hostname of the container"
-  type = string
 }
 
 variable "execution_role_arn" {
@@ -85,7 +81,7 @@ variable "service_discovery_namespace_arn" {
 
 variable "environment_variables" {
   description = "Environment variables for the container"
-  type        = list(object({
+  type = list(object({
     name  = string
     value = string
   }))

@@ -22,3 +22,7 @@ output "discovery_name" {
   value       = var.discovery_name != "" ? var.discovery_name : var.task_name
   description = "Service Connect discovery name"
 }
+
+output "container_port" {
+  value = var.container_port
+}
