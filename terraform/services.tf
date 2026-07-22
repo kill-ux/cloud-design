@@ -327,14 +327,14 @@ module "billing_service" {
   cpu    = 128
   memory = 256
 
-   environment_variables = [
+  environment_variables = [
     {
       name  = "BILLING_APP_PORT"
       value = "8080"
     },
     {
       name  = "BILLING_DB_HOST"
-      value = module.inventory_db_service.discovery_name
+      value = "billing_db"
     },
     {
       name  = "BILLING_DB_PORT"
@@ -345,12 +345,32 @@ module "billing_service" {
       value = var.billing_db_user
     },
     {
-      name  = "INVENTORY_DB_PASS"
+      name  = "BILLING_DB_PASS"
       value = var.billing_db_password
     },
     {
       name  = "BILLING_DB_NAME"
       value = var.billing_db_name
+    },
+    {
+      name  = "RABBITMQ_HOST"
+      value = "rabbitmq"
+    },
+    {
+      name  = "RABBITMQ_PORT"
+      value = "5672"
+    },
+    {
+      name  = "RABBITMQ_QUEUE"
+      value = "billing-queue"
+    },
+    {
+      name  = "RABBITMQ_USER"
+      value = var.rabbitmq_user
+    },
+    {
+      name  = "RABBITMQ_PASS"
+      value = var.rabbitmq_password
     }
   ]
 }
