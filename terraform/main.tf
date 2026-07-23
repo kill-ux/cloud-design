@@ -28,7 +28,7 @@ module "ecs" {
   private_subnet_ids        = module.vpc.private_subnet_ids
   public_subnet_ids         = module.vpc.public_subnet_ids
   desired_capacity = 6
-  min_size = 1
+  min_size = 6
   max_size = 12
   service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
 }

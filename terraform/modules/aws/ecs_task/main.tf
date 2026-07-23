@@ -15,6 +15,9 @@ resource "aws_ecs_task_definition" "task" {
   memory                   = var.memory
   execution_role_arn       = var.execution_role_arn
 
+
+
+
   container_definitions = jsonencode([
     {
       name      = var.container_name != "" ? var.container_name : var.task_name
@@ -93,6 +96,13 @@ resource "aws_ecs_service" "service" {
     }
   }
 
+  dynamic "placement_constraints" {
+    for_each = var.enable_distinct_instance ? [1] : []
+    content {
+      type = "distinctInstance"
+    }
+  }
+
   tags = merge(var.tags, { "Name" = "${var.task_name}-service" })
 
   depends_on = [aws_cloudwatch_log_group.task_logs, aws_ecs_task_definition.task]
@@ -100,3 +110,11 @@ resource "aws_ecs_service" "service" {
 
 # Data source for current region
 data "aws_region" "current" {}
+
+
+# resource "aws_appautoscaling_target" "name" {
+#   max_capacity = var.max_capacity
+#   min_capacity = var.min_capacity
+#   resource_id = "service/${module.ecs.cluster_name}/${aws_ecs_service.service.name}"
+#   scalable_dimension
+# }

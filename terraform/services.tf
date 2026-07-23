@@ -117,7 +117,7 @@ module "api_gateway_service" {
   security_groups = [module.gateway_sg.id]
   cpu             = 128
   memory          = 256
-  desired_count = 2
+  desired_count   = 1
 
 
   target_group_arn = module.alb.target_group_arn
@@ -218,8 +218,8 @@ module "rabbitmq_service" {
   subnets         = module.vpc.private_subnet_ids
   security_groups = [module.rabbitmq_sg.id]
 
-  cpu    = 128
-  memory = 256
+  cpu           = 128
+  memory        = 256
   desired_count = 1
 
   environment_variables = [
@@ -274,8 +274,8 @@ module "inventory_service" {
   subnets         = module.vpc.private_subnet_ids
   security_groups = [module.inventory_sg.id]
 
-  cpu    = 128
-  memory = 256
+  cpu           = 128
+  memory        = 256
   desired_count = 1
 
   environment_variables = [
@@ -346,10 +346,10 @@ module "inventory_db_service" {
   subnets         = module.vpc.private_subnet_ids
   security_groups = [module.inventory_db_sg.id]
 
-  cpu    = 128
-  memory = 256
-  desired_count = 1
-
+  cpu                      = 128
+  memory                   = 256
+  desired_count            = 1
+  enable_distinct_instance = true
 
   environment_variables = [
     {
@@ -408,8 +408,8 @@ module "billing_service" {
   subnets         = module.vpc.private_subnet_ids
   security_groups = [module.billing_sg.id]
 
-  cpu    = 128
-  memory = 256
+  cpu           = 128
+  memory        = 256
   desired_count = 1
 
 
@@ -501,9 +501,10 @@ module "billing_db_service" {
   subnets         = module.vpc.private_subnet_ids
   security_groups = [module.billing_db_sg.id]
 
-  cpu    = 128
-  memory = 256
-  desired_count = 1
+  cpu                      = 128
+  memory                   = 256
+  desired_count            = 1
+  enable_distinct_instance = true
 
   environment_variables = [
     {

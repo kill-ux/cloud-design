@@ -14,6 +14,6 @@ COPY . .
 
 ENTRYPOINT gunicorn --workers=4 \
                     --bind=0.0.0.0:$APIGATEWAY_PORT \
-                    --access-logfile=/app/logs/access.log \
+                    --access-logfile=- \
                     --error-logfile=- \
                     server:app

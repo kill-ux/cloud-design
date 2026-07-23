@@ -121,4 +121,22 @@ variable "target_group_arn" {
   description = "Optional ALB Target Group ARN to register task targets"
   type        = string
   default     = ""
-} 
+}
+
+variable "enable_distinct_instance" {
+  description = "Placement constraints for the ECS service"
+  type        = bool
+  default     = false
+}
+
+variable "max_capacity" {
+  description = "Maximum number of tasks for auto-scaling"
+  type        = number
+  default     = 1
+}
+
+variable "min_capacity" {
+  description = "Minimum number of tasks for auto-scaling"
+  type        = number
+  default     = 1
+}
