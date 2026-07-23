@@ -83,6 +83,16 @@ resource "aws_ecs_service" "service" {
     }
   }
 
+  dynamic "load_balancer" {
+    for_each = var.target_group_arn != "" ? [1] : []
+
+    content {
+      target_group_arn = var.target_group_arn
+      container_name   = var.container_name != "" ? var.container_name : var.task_name
+      container_port   = var.container_port
+    }
+  }
+
   tags = merge(var.tags, { "Name" = "${var.task_name}-service" })
 
   depends_on = [aws_cloudwatch_log_group.task_logs, aws_ecs_task_definition.task]

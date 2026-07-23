@@ -99,3 +99,8 @@
 #   description = "Public IPs of ECS EC2 instances - SSH into these to test Service Connect"
 #   value       = module.ecs.ecs_instance_public_ips
 # }
+
+output "alb_dns_name" {
+  description = "The public DNS URL of the Load Balancer"
+  value       = module.alb.alb_dns_name
+}

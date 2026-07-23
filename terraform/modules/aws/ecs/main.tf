@@ -49,9 +49,9 @@ resource "aws_launch_template" "ecs_lt" {
 
 resource "aws_autoscaling_group" "ecs_asg" {
   name                = "cloud-design-ecs-asg"
-  desired_capacity    = 1
-  min_size            = 1
-  max_size            = 1
+  desired_capacity    = 6
+  min_size            = 6
+  max_size            = 6
   vpc_zone_identifier = var.private_subnet_ids
 
   launch_template {
@@ -96,11 +96,11 @@ resource "aws_ecs_cluster_capacity_providers" "cloud_design_cp_assoc" {
 }
 
 # Data source to get EC2 instances in the ASG
-data "aws_instances" "ecs_instances" {
-  filter {
-    name   = "tag:aws:autoscaling:groupName"
-    values = [aws_autoscaling_group.ecs_asg.name]
-  }
+# data "aws_instances" "ecs_instances" {
+#   filter {
+#     name   = "tag:aws:autoscaling:groupName"
+#     values = [aws_autoscaling_group.ecs_asg.name]
+#   }
 
-  depends_on = [aws_autoscaling_group.ecs_asg]
-}
+#   depends_on = [aws_autoscaling_group.ecs_asg]
+# }

@@ -8,7 +8,7 @@ variable "task_name" {
 variable "container_name" {
   description = "Name of the container"
   type        = string
-  default = ""
+  default     = ""
 }
 
 variable "container_image" {
@@ -117,3 +117,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "target_group_arn" {
+  description = "Optional ALB Target Group ARN to register task targets"
+  type        = string
+  default     = ""
+} 
