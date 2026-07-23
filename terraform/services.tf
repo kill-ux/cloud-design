@@ -119,6 +119,11 @@ module "api_gateway_service" {
   memory          = 256
   desired_count   = 1
 
+  enable_autoscaling = true
+  scaling_metric     = "requests"
+  target_value       = "100"
+
+  # alb_arn_suffix = module.alb.
 
   target_group_arn = module.alb.target_group_arn
 

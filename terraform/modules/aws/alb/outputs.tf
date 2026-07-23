@@ -7,3 +7,13 @@ output "alb_dns_name" {
   description = "DNS name of the Load Balancer"
   value       = aws_lb.cloud_design_alb.dns_name
 }  
+
+output "arn_suffix" {
+  description = "ARN suffix of the Load Balancer"
+  value       = aws_lb.cloud_design_alb.arn_suffix
+}
+
+output "name" {
+  description = "Name of the Load Balancer"
+  value       = aws_lb
+}

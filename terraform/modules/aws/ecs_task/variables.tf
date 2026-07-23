@@ -140,3 +140,36 @@ variable "min_capacity" {
   type        = number
   default     = 1
 }
+
+variable "enable_autoscaling" {
+  type        = bool
+  default     = false
+  description = "Set to true to enable target tracking auto-scaling for this service"
+}
+
+variable "cluster_name" {
+  description = "ECS Cluster name"
+  type        = string
+}
+
+variable "scaling_metric" {
+  type        = string
+  default     = "cpu"
+  description = "The metric to scale on: cpu, memory, or requests"
+}
+
+variable "target_value" {
+  type        = number
+  default     = 70
+  description = "Target average value to trigger scaling"
+}
+
+variable "alb_arn_suffix" {
+  type    = string
+  default = ""
+}
+
+variable "alb_target_group_arn_suffix" {
+  type    = string
+  default = ""
+}
