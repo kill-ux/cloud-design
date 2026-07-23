@@ -13,12 +13,12 @@ resource "aws_lb_target_group" "cloud_design_gateway_tg" {
   port        = 3000
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
-  target_type = "ip"
+  target_type = "ip" // the other option is an instance
 
   health_check {
     path                = "/health"
     protocol            = "HTTP"
-    matcher             = "200"
+    matcher             = "200" // status
     interval            = 30
     timeout             = 5
     healthy_threshold   = 2

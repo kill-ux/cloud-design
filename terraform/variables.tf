@@ -29,14 +29,12 @@ variable "ecr_registry" {
 variable "rabbitmq_user" {
   description = "RabbitMQ username"
   type        = string
-  default     = "rabbit"
   sensitive   = true
 }
 
 variable "rabbitmq_password" {
   description = "RabbitMQ password"
   type        = string
-  default     = "password"
   sensitive   = true
 }
 
@@ -55,7 +53,6 @@ variable "inventory_db_password" {
 variable "inventory_db_name" {
   description = "Inventory DB name"
   type        = string
-  default     = "inventory_db"
 }
 
 variable "billing_db_user" {
@@ -73,7 +70,6 @@ variable "billing_db_password" {
 variable "billing_db_name" {
   description = "billing DB name"
   type        = string
-  default     = "billing_db"
 }
 
 
