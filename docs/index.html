@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cloud-Design Architecture & Technical Specs</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/diagram.css">
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <span class="tag">LAB TECHNICAL SPECIFICATION</span>
+      <h1>AWS Cloud Architecture & Microservices Lab</h1>
+      <div class="meta">Infrastructure as Code: Terraform 1.10+ | Container Engine: Amazon ECS | Region: eu-west-3</div>
+    </header>
+
+    <!-- Navigation Bar -->
+    <nav class="nav-bar">
+      <button class="nav-item active" data-tab="diagram-tab">SYSTEM ARCHITECTURE</button>
+      <button class="nav-item" data-tab="services-tab">MICROSERVICES STACK</button>
+      <button class="nav-item" data-tab="modules-tab">TERRAFORM MODULES</button>
+      <button class="nav-item" data-tab="ops-tab">OPERATIONAL COMMANDS</button>
+    </nav>
+
+    <!-- TAB 1: PURE HTML/CSS DIAGRAM -->
+    <div id="diagram-tab" class="tab-content active">
+      <div class="section-panel">
+        <div class="section-header">
+          <span>01. Pure HTML/CSS System Architecture Diagram</span>
+          <span style="font-size: 11px; color: var(--color-orange); font-family: monospace;">VPC / Multi-AZ / ECS Tasks / Subnets</span>
+        </div>
+
+        <div class="diagram-viewport">
+          <div class="aws-region">
+            <div class="region-label">AWS Region (eu-west-3)</div>
+
+            <div class="vpc-box">
+              <div class="vpc-label">VPC (10.0.0.0/16)</div>
+
+              <div class="az-grid">
+                <!-- Availability Zone 1 -->
+                <div class="az-box">
+                  <div class="az-label">AZ-1: eu-west-3a</div>
+
+                  <!-- Public Subnet -->
+                  <div class="subnet-box subnet-public">
+                    <div class="subnet-label">
+                      <span>Public Subnet (10.0.0.0/24)</span>
+                      <span>IGW ROUTE</span>
+                    </div>
+                    <div class="node-row">
+                      <div class="node-card">
+                        <div class="node-title">ALB Load Balancer</div>
+                        <div class="node-port">PORT: 80</div>
+                        <div class="node-role">HTTP Ingress Target</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flow-bar">
+                    <span>TRAFFIC FLOW</span>
+                    <span class="flow-arrow">&darr;</span>
+                    <span>ALB TARGET GROUP</span>
+                    <span class="flow-arrow">&darr;</span>
+                    <span>PORT 3000</span>
+                  </div>
+
+                  <!-- Private Subnet -->
+                  <div class="subnet-box subnet-private">
+                    <div class="subnet-label">
+                      <span>Private Subnet (10.0.1.0/24)</span>
+                      <span>ECS TASKS</span>
+                    </div>
+                    <div class="node-row">
+                      <div class="node-card">
+                        <div class="node-title">API Gateway</div>
+                        <div class="node-port">PORT: 3000</div>
+                        <div class="node-role">HTTP Router</div>
+                      </div>
+                      <div class="node-card">
+                        <div class="node-title">Inventory App</div>
+                        <div class="node-port">PORT: 8080</div>
+                        <div class="node-role">Stock Service</div>
+                      </div>
+                      <div class="node-card">
+                        <div class="node-title">Billing App</div>
+                        <div class="node-port">PORT: 8080</div>
+                        <div class="node-role">Queue Worker</div>
+                      </div>
+                    </div>
+
+                    <div class="flow-bar" style="margin-top: 12px; margin-bottom: 12px;">
+                      <span>AMQP 5672</span>
+                      <span class="flow-arrow">&rarr;</span>
+                      <span>RABBITMQ BROKER</span>
+                      <span class="flow-arrow">&rarr;</span>
+                      <span>POSTGRES 5432</span>
+                    </div>
+
+                    <div class="node-row">
+                      <div class="node-card">
+                        <div class="node-title">RabbitMQ Broker</div>
+                        <div class="node-port">PORT: 5672</div>
+                        <div class="node-role">AMQP Broker</div>
+                      </div>
+                      <div class="node-card">
+                        <div class="node-title">Inventory DB</div>
+                        <div class="node-port">PORT: 5432</div>
+                        <div class="node-role">PostgreSQL DB</div>
+                      </div>
+                      <div class="node-card">
+                        <div class="node-title">Billing DB</div>
+                        <div class="node-port">PORT: 5432</div>
+                        <div class="node-role">PostgreSQL DB</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Availability Zone 2 -->
+                <div class="az-box">
+                  <div class="az-label">AZ-2: eu-west-3b</div>
+
+                  <!-- Public Subnet -->
+                  <div class="subnet-box subnet-public">
+                    <div class="subnet-label">
+                      <span>Public Subnet (10.0.2.0/24)</span>
+                      <span>IGW ROUTE</span>
+                    </div>
+                    <div class="node-row">
+                      <div class="node-card">
+                        <div class="node-title">ALB Standby / HA</div>
+                        <div class="node-port">PORT: 80</div>
+                        <div class="node-role">Multi-AZ Subnet Target</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flow-bar">
+                    <span>TRAFFIC FLOW</span>
+                    <span class="flow-arrow">&darr;</span>
+                    <span>ALB TARGET GROUP</span>
+                    <span class="flow-arrow">&darr;</span>
+                    <span>PORT 3000</span>
+                  </div>
+
+                  <!-- Private Subnet -->
+                  <div class="subnet-box subnet-private">
+                    <div class="subnet-label">
+                      <span>Private Subnet (10.0.3.0/24)</span>
+                      <span>ECS TASKS</span>
+                    </div>
+                    <div class="node-row">
+                      <div class="node-card">
+                        <div class="node-title">API Gateway</div>
+                        <div class="node-port">PORT: 3000</div>
+                        <div class="node-role">HTTP Router</div>
+                      </div>
+                      <div class="node-card">
+                        <div class="node-title">Inventory App</div>
+                        <div class="node-port">PORT: 8080</div>
+                        <div class="node-role">Stock Service</div>
+                      </div>
+                      <div class="node-card">
+                        <div class="node-title">Billing App</div>
+                        <div class="node-port">PORT: 8080</div>
+                        <div class="node-role">Queue Worker</div>
+                      </div>
+                    </div>
+
+                    <div class="flow-bar" style="margin-top: 12px; margin-bottom: 12px;">
+                      <span>AMQP 5672</span>
+                      <span class="flow-arrow">&rarr;</span>
+                      <span>RABBITMQ BROKER</span>
+                      <span class="flow-arrow">&rarr;</span>
+                      <span>POSTGRES 5432</span>
+                    </div>
+
+                    <div class="node-row">
+                      <div class="node-card">
+                        <div class="node-title">RabbitMQ Broker</div>
+                        <div class="node-port">PORT: 5672</div>
+                        <div class="node-role">AMQP Broker</div>
+                      </div>
+                      <div class="node-card">
+                        <div class="node-title">Inventory DB</div>
+                        <div class="node-port">PORT: 5432</div>
+                        <div class="node-role">PostgreSQL DB</div>
+                      </div>
+                      <div class="node-card">
+                        <div class="node-title">Billing DB</div>
+                        <div class="node-port">PORT: 5432</div>
+                        <div class="node-role">PostgreSQL DB</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: MICROSERVICES -->
+    <div id="services-tab" class="tab-content">
+      <div class="section-panel">
+        <div class="section-header">
+          <span>02. Microservices Stack Specification</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Service Name</th>
+              <th>Container Port</th>
+              <th>Service Connect DNS</th>
+              <th>Resource Limits</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>API Gateway</strong></td>
+              <td><code>3000</code></td>
+              <td><code>api-gateway.local</code></td>
+              <td>128 CPU / 256 MB</td>
+            </tr>
+            <tr>
+              <td><strong>Inventory App</strong></td>
+              <td><code>8080</code></td>
+              <td><code>inventory.local</code></td>
+              <td>128 CPU / 256 MB</td>
+            </tr>
+            <tr>
+              <td><strong>Billing App</strong></td>
+              <td><code>8080</code></td>
+              <td><code>billing.local</code></td>
+              <td>128 CPU / 256 MB</td>
+            </tr>
+            <tr>
+              <td><strong>RabbitMQ AMQP</strong></td>
+              <td><code>5672</code></td>
+              <td><code>rabbitmq.local</code></td>
+              <td>128 CPU / 256 MB</td>
+            </tr>
+            <tr>
+              <td><strong>Inventory DB</strong></td>
+              <td><code>5432</code></td>
+              <td><code>inventory_db.local</code></td>
+              <td>128 CPU / 256 MB</td>
+            </tr>
+            <tr>
+              <td><strong>Billing DB</strong></td>
+              <td><code>5432</code></td>
+              <td><code>billing_db.local</code></td>
+              <td>128 CPU / 256 MB</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 3: TERRAFORM MODULES -->
+    <div id="modules-tab" class="tab-content">
+      <div class="section-panel">
+        <div class="section-header">
+          <span>03. Terraform IaC Modules</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Module Path</th>
+              <th>Primary Managed Resources</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>modules/aws/vpc</code></td>
+              <td>VPC, Multi-AZ Public/Private Subnets, IGW, Interface VPC Endpoints</td>
+            </tr>
+            <tr>
+              <td><code>modules/aws/alb</code></td>
+              <td>Application Load Balancer, Listener, Target Group</td>
+            </tr>
+            <tr>
+              <td><code>modules/aws/ecs</code></td>
+              <td>ECS Cluster, EC2 ASG, Launch Template, Capacity Provider</td>
+            </tr>
+            <tr>
+              <td><code>modules/aws/ecs_task</code></td>
+              <td>ECS Task Definitions, ECS Services, CloudWatch Logs</td>
+            </tr>
+            <tr>
+              <td><code>modules/aws/iam</code></td>
+              <td>ECS Instance Profile, Task Execution Roles</td>
+            </tr>
+            <tr>
+              <td><code>modules/aws/security_group</code></td>
+              <td>Dynamic VPC Security Groups & Fine-Grained Rules</td>
+            </tr>
+            <tr>
+              <td><code>modules/aws/ecr</code></td>
+              <td>Elastic Container Registry Repositories</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 4: OPERATIONAL COMMANDS -->
+    <div id="ops-tab" class="tab-content">
+      <div class="section-panel">
+        <div class="section-header">
+          <span>04. Operational Commands (Makefile)</span>
+        </div>
+        <div class="cmd-list">
+          <div class="cmd-item">
+            <span class="cmd-name">make plan</span>
+            <span class="cmd-desc">Validate configuration and generate execution plan against environment variables</span>
+          </div>
+          <div class="cmd-item">
+            <span class="cmd-name">make apply</span>
+            <span class="cmd-desc">Deploy updated infrastructure changes directly to AWS account</span>
+          </div>
+          <div class="cmd-item">
+            <span class="cmd-name">make ssh</span>
+            <span class="cmd-desc">Lookup active EC2 instance IP address in ASG and initiate SSH connection</span>
+          </div>
+          <div class="cmd-item">
+            <span class="cmd-name">make cluster</span>
+            <span class="cmd-desc">Output ECS cluster health status and registered container instance metrics</span>
+          </div>
+          <div class="cmd-item">
+            <span class="cmd-name">make services</span>
+            <span class="cmd-desc">Display active state and task count for all running ECS services</span>
+          </div>
+          <div class="cmd-item">
+            <span class="cmd-name">make destroy</span>
+            <span class="cmd-desc">Teardown provisioned cloud infrastructure resources</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <span>Cloud-Design Lab Documentation</span>
+      <span>Structured Files: index.html | css/style.css | css/diagram.css | js/app.js</span>
+    </footer>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
