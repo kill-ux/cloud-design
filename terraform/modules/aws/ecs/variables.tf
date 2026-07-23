@@ -21,17 +21,22 @@ variable "public_subnet_ids" {
   type        = list(string)
 }
 
-# variable "nginx_sd_1" {
-#   description = "Service discovery service name for nginx"
-#   type        = string
-# }
-
-# variable "nginx_sd_2" {
-#   description = "Service discovery service name for nginx"
-#   type        = string
-# }
-
 variable "service_discovery_namespace_arn" {
   description = "ARN of Service Discovery HTTP namespace"
   type        = string
+}
+
+variable "desired_capacity" {
+  description = "Desired capacity of the autoscaling group"
+  type        = number
+}
+
+variable "max_size" {
+  description = "Max size of the autoscaling group"
+  type        = number
+}
+
+variable "min_size" {
+  description = "Min size of the autoscaling group"
+  type        = number
 }

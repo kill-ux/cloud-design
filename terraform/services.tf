@@ -19,6 +19,63 @@ module "vpc_endpoints_sg" {
 }
 
 
+# ===== ALB Security Group =====
+module "alb_sg" {
+  source = "./modules/aws/security_group"
+
+  name        = "alb_sg"
+  description = "Allow inbound internet traffic to ALB"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress_rules = [
+    {
+      description = "Allow HTTP from internet"
+      from_port   = 80
+      protocol    = "tcp"
+      to_port     = 80
+      cidr_ipv4   = "0.0.0.0/0"
+    }
+  ]
+
+  tags = { "Component" = "alb" }
+}
+
+
+# ===== ECS Instance Security Group =====
+module "ecs_instance_sg" {
+  source = "./modules/aws/security_group"
+
+  name        = "ecs_instance_sg"
+  description = "Security group for ECS EC2 instances"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress_rules = [
+    {
+      description = "Allow Service Connect traffic between ECS services"
+      from_port   = 80
+      protocol    = "tcp"
+      to_port     = 80
+      self        = true
+    },
+    {
+      description                  = "Allow traffic from ALB"
+      from_port                    = 80
+      to_port                      = 80
+      protocol                     = "tcp"
+      referenced_security_group_id = module.alb_sg.id
+    },
+    # {
+    #   description = "TEMP: Allow SSH for debugging"
+    #   from_port   = 22
+    #   to_port     = 22
+    #   protocol    = "tcp"
+    #   cidr_ipv4   = "0.0.0.0/0"
+    # }
+  ]
+
+  tags = { "Component" = "compute" }
+}
+
 # ==================== API Gateway Security Group ====================
 module "gateway_sg" {
   source = "./modules/aws/security_group"
@@ -60,7 +117,7 @@ module "api_gateway_service" {
   security_groups = [module.gateway_sg.id]
   cpu             = 128
   memory          = 256
-
+  desired_count = 2
 
 
   target_group_arn = module.alb.target_group_arn
@@ -163,6 +220,7 @@ module "rabbitmq_service" {
 
   cpu    = 128
   memory = 256
+  desired_count = 1
 
   environment_variables = [
     {
@@ -218,7 +276,7 @@ module "inventory_service" {
 
   cpu    = 128
   memory = 256
-
+  desired_count = 1
 
   environment_variables = [
     {
@@ -290,6 +348,7 @@ module "inventory_db_service" {
 
   cpu    = 128
   memory = 256
+  desired_count = 1
 
 
   environment_variables = [
@@ -351,7 +410,7 @@ module "billing_service" {
 
   cpu    = 128
   memory = 256
-
+  desired_count = 1
 
 
   environment_variables = [
@@ -444,6 +503,7 @@ module "billing_db_service" {
 
   cpu    = 128
   memory = 256
+  desired_count = 1
 
   environment_variables = [
     {
@@ -461,64 +521,3 @@ module "billing_db_service" {
   ]
 }
 
-
-# ===== ALB Security Group =====
-module "alb_sg" {
-  source = "./modules/aws/security_group"
-
-  name        = "alb_sg"
-  description = "Allow inbound internet traffic to ALB"
-  vpc_id      = module.vpc.vpc_id
-
-  ingress_rules = [
-    {
-      description = "Allow HTTP from internet"
-      from_port   = 80
-      protocol    = "tcp"
-      to_port     = 80
-      cidr_ipv4   = "0.0.0.0/0"
-    }
-  ]
-
-  tags = { "Component" = "alb" }
-}
-
-
-
-
-
-
-# ===== ECS Instance Security Group =====
-module "ecs_instance_sg" {
-  source = "./modules/aws/security_group"
-
-  name        = "ecs_instance_sg"
-  description = "Security group for ECS EC2 instances"
-  vpc_id      = module.vpc.vpc_id
-
-  ingress_rules = [
-    {
-      description = "Allow Service Connect traffic between ECS services"
-      from_port   = 80
-      protocol    = "tcp"
-      to_port     = 80
-      self        = true
-    },
-    {
-      description                  = "Allow traffic from ALB"
-      from_port                    = 80
-      to_port                      = 80
-      protocol                     = "tcp"
-      referenced_security_group_id = module.alb_sg.id
-    },
-    # {
-    #   description = "TEMP: Allow SSH for debugging"
-    #   from_port   = 22
-    #   to_port     = 22
-    #   protocol    = "tcp"
-    #   cidr_ipv4   = "0.0.0.0/0"
-    # }
-  ]
-
-  tags = { "Component" = "compute" }
-}

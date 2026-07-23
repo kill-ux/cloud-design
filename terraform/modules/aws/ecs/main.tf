@@ -49,9 +49,9 @@ resource "aws_launch_template" "ecs_lt" {
 
 resource "aws_autoscaling_group" "ecs_asg" {
   name                = "cloud-design-ecs-asg"
-  desired_capacity    = 6
-  min_size            = 6
-  max_size            = 6
+  desired_capacity    = var.desired_capacity
+  min_size            = var.min_size
+  max_size            = var.max_size
   vpc_zone_identifier = var.private_subnet_ids
 
   launch_template {
@@ -78,9 +78,9 @@ resource "aws_ecs_capacity_provider" "cloud_design_cp" {
     managed_termination_protection = "DISABLED"
     managed_scaling {
       status                    = "ENABLED"
-      target_capacity           = 100
+      target_capacity           = 80
       minimum_scaling_step_size = 1
-      maximum_scaling_step_size = 1
+      maximum_scaling_step_size = 10
     }
   }
 }
@@ -94,13 +94,3 @@ resource "aws_ecs_cluster_capacity_providers" "cloud_design_cp_assoc" {
     weight            = 100
   }
 }
-
-# Data source to get EC2 instances in the ASG
-# data "aws_instances" "ecs_instances" {
-#   filter {
-#     name   = "tag:aws:autoscaling:groupName"
-#     values = [aws_autoscaling_group.ecs_asg.name]
-#   }
-
-#   depends_on = [aws_autoscaling_group.ecs_asg]
-# }

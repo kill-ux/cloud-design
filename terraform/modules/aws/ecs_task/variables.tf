@@ -71,7 +71,6 @@ variable "security_groups" {
 variable "desired_count" {
   description = "Desired number of tasks"
   type        = number
-  default     = 1
 }
 
 variable "service_discovery_namespace_arn" {
