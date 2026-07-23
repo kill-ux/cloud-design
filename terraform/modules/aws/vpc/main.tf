@@ -72,6 +72,18 @@ resource "aws_route_table_association" "rt_association" {
   subnet_id      = each.value.id
 }
 
+resource "aws_route_table" "private_rt" {
+  vpc_id = aws_vpc.cloud-design-vpc.id
+
+  tags = { "Name" = "cloud-design-private-rt" }
+}
+
+resource "aws_route_table_association" "private_rt_association" {
+  for_each = aws_subnet.private
+
+  route_table_id = aws_route_table.private_rt.id
+  subnet_id      = each.value.id
+}
 
 resource "aws_vpc_endpoint" "ecr_api" {
   vpc_id              = aws_vpc.cloud-design-vpc.id
@@ -99,8 +111,58 @@ resource "aws_vpc_endpoint" "s3" {
   vpc_id            = aws_vpc.cloud-design-vpc.id
   service_name      = "com.amazonaws.${var.aws_region}.s3"
   vpc_endpoint_type = "Gateway"
-  route_table_ids   = [aws_route_table.rt.id]
+  route_table_ids   = [aws_route_table.private_rt.id]
 
   tags = { "Name" = "cloud-design-s3-endpoint" }
 }
 
+#########################################""
+#########################################""
+#########################################""
+#########################################""
+#########################################""
+
+ resource "aws_vpc_endpoint" "ecs" {                                               
+      vpc_id              = aws_vpc.cloud-design-vpc.id                               
+      service_name        = "com.amazonaws.${var.aws_region}.ecs"                     
+      vpc_endpoint_type   = "Interface"                                               
+      subnet_ids          = [for s in aws_subnet.private : s.id]                      
+      security_group_ids  = [var.vpc_endpoints_sg_id]                                 
+      private_dns_enabled = true                                                      
+                                                                                      
+      tags = { "Name" = "cloud-design-ecs-endpoint" }                                 
+    }                                                                                 
+                                                                                      
+    resource "aws_vpc_endpoint" "ecs_telemetry" {                                     
+      vpc_id              = aws_vpc.cloud-design-vpc.id                               
+      service_name        = "com.amazonaws.${var.aws_region}.ecs-telemetry"           
+      vpc_endpoint_type   = "Interface"                                               
+      subnet_ids          = [for s in aws_subnet.private : s.id]                      
+      security_group_ids  = [var.vpc_endpoints_sg_id]                                 
+      private_dns_enabled = true                                                      
+                                                                                      
+      tags = { "Name" = "cloud-design-ecs-telemetry-endpoint" }                       
+    }                                                                                 
+                                                                                      
+    resource "aws_vpc_endpoint" "ecs_agent" {                                         
+      vpc_id              = aws_vpc.cloud-design-vpc.id                               
+      service_name        = "com.amazonaws.${var.aws_region}.ecs-agent"               
+      vpc_endpoint_type   = "Interface"                                               
+      subnet_ids          = [for s in aws_subnet.private : s.id]                      
+      security_group_ids  = [var.vpc_endpoints_sg_id]                                 
+      private_dns_enabled = true                                                      
+                                                                                      
+      tags = { "Name" = "cloud-design-ecs-agent-endpoint" }                           
+    }                                                                                 
+                                                                                      
+    resource "aws_vpc_endpoint" "logs" {                                              
+      vpc_id              = aws_vpc.cloud-design-vpc.id                               
+      service_name        = "com.amazonaws.${var.aws_region}.logs"                    
+      vpc_endpoint_type   = "Interface"                                               
+      subnet_ids          = [for s in aws_subnet.private : s.id]                      
+      security_group_ids  = [var.vpc_endpoints_sg_id]                                 
+      private_dns_enabled = true                                                      
+                                                                                      
+      tags = { "Name" = "cloud-design-logs-endpoint" }                                
+    }                                                                                 
+    

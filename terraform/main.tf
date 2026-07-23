@@ -5,17 +5,12 @@ module "vpc" {
   vpc_endpoints_sg_id = module.vpc_endpoints_sg.id
 }
 
-# module "security" {
-#   source = "./modules/aws/security_group"
-#   vpc_id = module.vpc.vpc_id
-# }
-
-# module "alb" {
-#   source = "./modules/aws/alb"
-#   alb_sg_id = module.security.alb_sg_id
-#   public_subnet_ids = module.vpc.public_subnet_ids
-#   vpc_id = module.vpc.vpc_id
-# }
+module "alb" {
+  source = "./modules/aws/alb"
+  alb_sg_id = module.alb_sg.id
+  public_subnet_ids = module.vpc.public_subnet_ids
+  vpc_id = module.vpc.vpc_id
+}
 
 module "ecr" {
   source = "./modules/aws/ecr"

@@ -42,7 +42,7 @@ output "service_discovery_namespace_arn" {
   value       = var.service_discovery_namespace_arn
 }
 
-output "ecs_instance_public_ips" {
-  description = "Public IPs of ECS EC2 instances - SSH into these to test Service Connect"
-  value       = data.aws_instances.ecs_instances.public_ips
-}
+# output "ecs_instance_public_ips" {
+#   description = "Public IPs of ECS EC2 instances - SSH into these to test Service Connect"
+#   value       = data.aws_instances.ecs_instances.public_ips
+# }
