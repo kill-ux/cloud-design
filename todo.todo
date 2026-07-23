@@ -34,3 +34,9 @@ aws ecs update-service --cluster cloud-design-cluster --service nginx_service_1 
 aws ecs update-service --cluster cloud-design-cluster --service nginx_service_2 --desired-count 1 --region eu-west-3
 
 
+
+
+10.0.1.1 vpc router (default gateway)
+10.0.1.2 amazone route 53
+10.0.1.3 not used but will e used in future for features
+
