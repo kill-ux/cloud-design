@@ -133,8 +133,8 @@ resource "aws_appautoscaling_policy" "scaling_policy" {
 
   target_tracking_scaling_policy_configuration {
     target_value       = var.target_value
-    scale_out_cooldown = 60
-    scale_in_cooldown  = 300
+    scale_out_cooldown = var.scale_out_cooldown
+    scale_in_cooldown  = var.scale_in_cooldown
 
     predefined_metric_specification {
       predefined_metric_type = (

@@ -168,3 +168,16 @@ variable "alb_target_group_arn_suffix" {
   type    = string
   default = ""
 }
+
+variable "scale_out_cooldown" {
+  type        = number
+  default     = 60
+  description = "Cooldown period in seconds after a scale-out activity"
+}
+
+
+variable "scale_in_cooldown" {
+  type        = number
+  default     = 300
+  description = "Cooldown period in seconds after a scale-in activity"
+}
