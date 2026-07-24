@@ -10,8 +10,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-ENTRYPOINT gunicorn --workers=4 \
-                    --bind=0.0.0.0:$BILLING_APP_PORT \
-                    --access-logfile=- \
-                    --error-logfile=- \
-                    server:app
+ENTRYPOINT ["python3", "server.py"]

@@ -12,8 +12,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-ENTRYPOINT gunicorn --workers=4 \
-                    --bind=0.0.0.0:$APIGATEWAY_PORT \
-                    --access-logfile=/app/logs/access.log \
-                    --error-logfile=- \
-                    server:app
+ENTRYPOINT ["python3", "server.py"]
