@@ -71,7 +71,6 @@ variable "security_groups" {
 variable "desired_count" {
   description = "Desired number of tasks"
   type        = number
-  default     = 1
 }
 
 variable "service_discovery_namespace_arn" {
@@ -122,4 +121,50 @@ variable "target_group_arn" {
   description = "Optional ALB Target Group ARN to register task targets"
   type        = string
   default     = ""
-} 
+}
+
+variable "enable_distinct_instance" {
+  description = "Placement constraints for the ECS service"
+  type        = bool
+  default     = false
+}
+
+variable "max_capacity" {
+  description = "Maximum number of tasks for auto-scaling"
+  type        = number
+  default     = 1
+}
+
+variable "min_capacity" {
+  description = "Minimum number of tasks for auto-scaling"
+  type        = number
+  default     = 1
+}
+
+variable "enable_autoscaling" {
+  type        = bool
+  default     = false
+  description = "Set to true to enable target tracking auto-scaling for this service"
+}
+
+variable "scaling_metric" {
+  type        = string
+  default     = "cpu"
+  description = "The metric to scale on: cpu, memory, or requests"
+}
+
+variable "target_value" {
+  type        = number
+  default     = 70
+  description = "Target average value to trigger scaling"
+}
+
+variable "alb_arn_suffix" {
+  type    = string
+  default = ""
+}
+
+variable "alb_target_group_arn_suffix" {
+  type    = string
+  default = ""
+}

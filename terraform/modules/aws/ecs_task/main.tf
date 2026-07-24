@@ -15,6 +15,9 @@ resource "aws_ecs_task_definition" "task" {
   memory                   = var.memory
   execution_role_arn       = var.execution_role_arn
 
+
+
+
   container_definitions = jsonencode([
     {
       name      = var.container_name != "" ? var.container_name : var.task_name
@@ -55,6 +58,7 @@ resource "aws_ecs_service" "service" {
   deployment_maximum_percent         = 100
   deployment_minimum_healthy_percent = 0
   availability_zone_rebalancing      = "DISABLED"
+  force_delete = true
 
   capacity_provider_strategy {
     capacity_provider = var.capacity_provider_name
@@ -93,6 +97,13 @@ resource "aws_ecs_service" "service" {
     }
   }
 
+  dynamic "placement_constraints" {
+    for_each = var.enable_distinct_instance ? [1] : []
+    content {
+      type = "distinctInstance"
+    }
+  }
+
   tags = merge(var.tags, { "Name" = "${var.task_name}-service" })
 
   depends_on = [aws_cloudwatch_log_group.task_logs, aws_ecs_task_definition.task]
@@ -100,3 +111,38 @@ resource "aws_ecs_service" "service" {
 
 # Data source for current region
 data "aws_region" "current" {}
+
+
+resource "aws_appautoscaling_target" "autoscaling_target" {
+  count              = var.enable_autoscaling ? 1 : 0
+  max_capacity       = var.max_capacity
+  min_capacity       = var.min_capacity
+  resource_id        = "service/${var.cluster_name}/${aws_ecs_service.service.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}
+
+
+resource "aws_appautoscaling_policy" "scaling_policy" {
+  count              = var.enable_autoscaling ? 1 : 0
+  name               = "${var.task_name}-${var.scaling_metric}-autoscaling"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.autoscaling_target[0].resource_id
+  scalable_dimension = aws_appautoscaling_target.autoscaling_target[0].scalable_dimension
+  service_namespace  = aws_appautoscaling_target.autoscaling_target[0].service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    target_value       = var.target_value
+    scale_out_cooldown = 60
+    scale_in_cooldown  = 300
+
+    predefined_metric_specification {
+      predefined_metric_type = (
+        var.scaling_metric == "requests" ? "ALBRequestCountPerTarget" :
+        var.scaling_metric == "memory" ? "ECSServiceAverageMemoryUtilization" :
+      "ECSServiceAverageCPUUtilization")
+
+      resource_label = var.scaling_metric == "requests" ? "${var.alb_arn_suffix}/${var.alb_target_group_arn_suffix}" : null
+    }
+  }
+}

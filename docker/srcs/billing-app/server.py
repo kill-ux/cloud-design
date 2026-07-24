@@ -6,6 +6,15 @@ from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import OperationalError
 
+import logging
+from waitress import serve
+from paste.translogger import TransLogger
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
+
 from app.orders import Base, Order
 from app.consume_queue import consume_and_store_order
 
@@ -23,22 +32,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = (
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app, model_class=Base)
-
-# with app.app_context():
-#     try:
-#         db.create_all()
-#         print("[*] Database tables verified/created successfully.", flush=True)
-#     except Exception as e:
-#         print(f"Database setup notice: {e}", flush=True)
-        
-        
-# consumer_thread = threading.Thread(
-#     target=consume_and_store_order, 
-#     args=(app, db), 
-#     daemon=True
-# )
-# consumer_thread.start()
-# print("[*] RabbitMQ background consumer thread started.", flush=True)
 
 # --- Start of Database Resilience Loop ---
 with app.app_context():
@@ -86,5 +79,13 @@ def get_orders():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == '__main__':
-    print(f"Starting local development server on port {BILLING_APP_PORT}...", flush=True)
-    app.run(host='0.0.0.0', port=int(BILLING_APP_PORT))
+    logged_app = TransLogger(app, setup_console_handler=True)
+
+    logging.info(f"Starting Waitress server on 0.0.0.0:{BILLING_APP_PORT}...")
+    
+    serve(
+        logged_app,
+        host='0.0.0.0',
+        port=int(BILLING_APP_PORT),
+        threads=8
+    )
