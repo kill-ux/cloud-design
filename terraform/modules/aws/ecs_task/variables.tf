@@ -147,11 +147,6 @@ variable "enable_autoscaling" {
   description = "Set to true to enable target tracking auto-scaling for this service"
 }
 
-variable "cluster_name" {
-  description = "ECS Cluster name"
-  type        = string
-}
-
 variable "scaling_metric" {
   type        = string
   default     = "cpu"

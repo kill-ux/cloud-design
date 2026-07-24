@@ -122,15 +122,15 @@ module "api_gateway_service" {
   enable_autoscaling = true
   scaling_metric     = "requests"
   target_value       = "100"
-
-  # alb_arn_suffix = module.alb.
-
   target_group_arn = module.alb.target_group_arn
+
+  alb_arn_suffix   = module.alb.arn_suffix
+  alb_target_group_arn_suffix = module.alb.alb_target_group_arn_suffix
 
   environment_variables = [
     {
       name  = "RABBITMQ_HOST"
-      value = "rabbitmq"
+      value = module.rabbitmq_service.discovery_name
     },
     {
       name  = "RABBITMQ_PORT"
@@ -142,7 +142,7 @@ module "api_gateway_service" {
     },
     {
       name  = "BILLING_APP_HOST"
-      value = "billing" // module.billing_service.discovery_name
+      value = module.billing_service.discovery_name 
     },
     {
       name  = "BILLING_APP_PORT"
@@ -150,7 +150,7 @@ module "api_gateway_service" {
     },
     {
       name  = "INVENTORY_APP_HOST"
-      value = "inventory" // module.inventory_service.discovery_name
+      value = module.inventory_service.discovery_name
     },
     {
       name  = "INVENTORY_APP_PORT"
@@ -169,6 +169,8 @@ module "api_gateway_service" {
       value = var.rabbitmq_password
     }
   ]
+
+  depends_on = [module.alb, module.billing_service, module.inventory_service]
 
   tags = { "Component" = "api" }
 }
@@ -237,6 +239,7 @@ module "rabbitmq_service" {
       value = var.rabbitmq_password
     }
   ]
+
 }
 
 # ==================== Inventory App Security Group ====================
@@ -309,6 +312,8 @@ module "inventory_service" {
       value = var.inventory_db_name
     }
   ]
+
+  depends_on = [module.inventory_db_service]
 }
 
 # ==================== Inventory DB Security Group ====================
@@ -338,9 +343,9 @@ module "inventory_db_service" {
   task_name       = "inventory-db"
   container_image = "${var.ecr_registry}/postgres-db:1.0.0"
   container_port  = 5432
-  port_name       = "inventory_db"
-  discovery_name  = "inventory_db"
-  dns_name        = "inventory_db"
+  port_name       = "inventory-db"
+  discovery_name  = "inventory-db"
+  dns_name        = "inventory-db"
 
   cluster_id                      = module.ecs.cluster_id
   cluster_name                    = module.ecs.cluster_name
@@ -425,7 +430,7 @@ module "billing_service" {
     },
     {
       name  = "BILLING_DB_HOST"
-      value = "billing_db"
+      value = module.billing_db_service.discovery_name
     },
     {
       name  = "BILLING_DB_PORT"
@@ -445,7 +450,7 @@ module "billing_service" {
     },
     {
       name  = "RABBITMQ_HOST"
-      value = "rabbitmq"
+      value = module.rabbitmq_service.discovery_name
     },
     {
       name  = "RABBITMQ_PORT"
@@ -464,6 +469,8 @@ module "billing_service" {
       value = var.rabbitmq_password
     }
   ]
+
+  depends_on = [module.billing_db_service, module.rabbitmq_service]
 }
 
 # ==================== Billing DB Security Group ====================
@@ -493,9 +500,9 @@ module "billing_db_service" {
   task_name       = "billing-db"
   container_image = "${var.ecr_registry}/postgres-db:1.0.0"
   container_port  = 5432
-  port_name       = "billing_db"
-  discovery_name  = "billing_db"
-  dns_name        = "billing_db"
+  port_name       = "billing-db"
+  discovery_name  = "billing-db"
+  dns_name        = "billing-db"
 
   cluster_id                      = module.ecs.cluster_id
   cluster_name                    = module.ecs.cluster_name
