@@ -121,11 +121,11 @@ module "api_gateway_service" {
 
   enable_autoscaling = true
   scaling_metric     = "requests"
-  target_value       = "1500"
-  max_capacity = 5
-  target_group_arn = module.alb.target_group_arn
+  target_value       = 1500
+  max_capacity       = 2
+  target_group_arn   = module.alb.target_group_arn
 
-  alb_arn_suffix   = module.alb.arn_suffix
+  alb_arn_suffix              = module.alb.arn_suffix
   alb_target_group_arn_suffix = module.alb.alb_target_group_arn_suffix
 
   environment_variables = [
@@ -143,7 +143,7 @@ module "api_gateway_service" {
     },
     {
       name  = "BILLING_APP_HOST"
-      value = module.billing_service.discovery_name 
+      value = module.billing_service.discovery_name
     },
     {
       name  = "BILLING_APP_PORT"
@@ -287,6 +287,11 @@ module "inventory_service" {
   memory        = 256
   desired_count = 1
 
+  enable_autoscaling = true
+  scaling_metric     = "cpu"
+  target_value       = 70
+  max_capacity       = 2
+
   environment_variables = [
     {
       name  = "INVENTORY_APP_PORT"
@@ -422,6 +427,11 @@ module "billing_service" {
   cpu           = 128
   memory        = 256
   desired_count = 1
+
+  enable_autoscaling = true
+  scaling_metric     = "cpu"
+  target_value       = 70
+  max_capacity       = 2
 
 
   environment_variables = [
