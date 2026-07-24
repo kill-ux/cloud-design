@@ -14,6 +14,7 @@ resource "aws_lb_target_group" "cloud_design_gateway_tg" {
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
   target_type = "ip" // the other option is an instance
+  deregistration_delay = 5
 
   health_check {
     path                = "/health"

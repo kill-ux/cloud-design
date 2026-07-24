@@ -58,6 +58,7 @@ resource "aws_ecs_service" "service" {
   deployment_maximum_percent         = 100
   deployment_minimum_healthy_percent = 0
   availability_zone_rebalancing      = "DISABLED"
+  force_delete = true
 
   capacity_provider_strategy {
     capacity_provider = var.capacity_provider_name

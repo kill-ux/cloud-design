@@ -121,7 +121,8 @@ module "api_gateway_service" {
 
   enable_autoscaling = true
   scaling_metric     = "requests"
-  target_value       = "100"
+  target_value       = "1500"
+  max_capacity = 5
   target_group_arn = module.alb.target_group_arn
 
   alb_arn_suffix   = module.alb.arn_suffix
