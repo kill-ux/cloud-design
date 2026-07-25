@@ -17,8 +17,9 @@ resource "aws_launch_template" "ecs_lt" {
 
       %{if var.enable_ebs_mounts~}
         sleep 10
+        file -s /dev/${var.device_name} | grep -q "data" && mkfs -t ext4 /dev/${var.device_name}
         mkdir -p /mnt/${var.task_name}
-        mount ${var.device_name} /mnt/${var.task_name}
+        mount /dev/${var.device_name} /mnt/${var.task_name}
         chmod 777 /mnt/${var.task_name}
         echo '${var.device_name} /mnt/${var.task_name} ext4 defaults,nofail 0 2' >> /etc/fstab
       %{endif~}
