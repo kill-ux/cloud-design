@@ -112,6 +112,8 @@ module "api_gateway_service" {
   capacity_provider_name          = module.ecs.capacity_provider_name
   execution_role_arn              = module.iam.ecs_execution_role_arn
   service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
+  ecs_instance_profile_name       = module.iam.ecs_instance_profile_name
+  ecs_instance_sg_id              = module.ecs_instance_sg.id
 
   subnets         = module.vpc.private_subnet_ids
   security_groups = [module.gateway_sg.id]
@@ -222,6 +224,8 @@ module "rabbitmq_service" {
   capacity_provider_name          = module.ecs.capacity_provider_name
   execution_role_arn              = module.iam.ecs_execution_role_arn
   service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
+  ecs_instance_profile_name       = module.iam.ecs_instance_profile_name
+  ecs_instance_sg_id              = module.ecs_instance_sg.id
 
   subnets         = module.vpc.private_subnet_ids
   security_groups = [module.rabbitmq_sg.id]
@@ -279,6 +283,8 @@ module "inventory_service" {
   capacity_provider_name          = module.ecs.capacity_provider_name
   execution_role_arn              = module.iam.ecs_execution_role_arn
   service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
+  ecs_instance_profile_name       = module.iam.ecs_instance_profile_name
+  ecs_instance_sg_id              = module.ecs_instance_sg.id
 
   subnets         = module.vpc.private_subnet_ids
   security_groups = [module.inventory_sg.id]
@@ -358,6 +364,11 @@ module "inventory_db_service" {
   capacity_provider_name          = module.ecs.capacity_provider_name
   execution_role_arn              = module.iam.ecs_execution_role_arn
   service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
+  ecs_instance_profile_name       = module.iam.ecs_instance_profile_name
+  ecs_instance_sg_id              = module.ecs_instance_sg.id
+
+  enable_ebs_mounts = true
+  device_name = module.inventory_db_volume.device_name
 
   subnets         = module.vpc.private_subnet_ids
   security_groups = [module.inventory_db_sg.id]
@@ -420,6 +431,11 @@ module "billing_service" {
   capacity_provider_name          = module.ecs.capacity_provider_name
   execution_role_arn              = module.iam.ecs_execution_role_arn
   service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
+  ecs_instance_profile_name       = module.iam.ecs_instance_profile_name
+  ecs_instance_sg_id              = module.ecs_instance_sg.id
+
+  enable_ebs_mounts = true
+  device_name = module.billing_db_volume.device_name
 
   subnets         = module.vpc.private_subnet_ids
   security_groups = [module.billing_sg.id]
@@ -520,6 +536,8 @@ module "billing_db_service" {
   capacity_provider_name          = module.ecs.capacity_provider_name
   execution_role_arn              = module.iam.ecs_execution_role_arn
   service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
+  ecs_instance_profile_name       = module.iam.ecs_instance_profile_name
+  ecs_instance_sg_id              = module.ecs_instance_sg.id
 
   subnets         = module.vpc.private_subnet_ids
   security_groups = [module.billing_db_sg.id]

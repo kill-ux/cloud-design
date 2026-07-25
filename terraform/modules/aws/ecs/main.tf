@@ -22,33 +22,34 @@ resource "aws_key_pair" "my_key" {
   public_key = file(".keys/id_ecs.pub")
 }
 
-resource "aws_launch_template" "ecs_lt" {
-  name_prefix   = "cloud-design-ecs-"
-  image_id      = data.aws_ssm_parameter.ecs_ami.value
-  instance_type = "t3.micro"
+# resource "aws_launch_template" "ecs_lt" {
+#   name_prefix   = "cloud-design-ecs-"
+#   image_id      = data.aws_ssm_parameter.ecs_ami.value
+#   instance_type = "t3.micro"
 
-  iam_instance_profile {
-    name = var.ecs_instance_profile_name
-  }
+#   iam_instance_profile {
+#     name = var.ecs_instance_profile_name
+#   }
 
-  vpc_security_group_ids = [var.ecs_instance_sg_id]
+#   vpc_security_group_ids = [var.ecs_instance_sg_id]
 
-   user_data = base64encode(<<-EOF
-      #!/bin/bash
-      # register
-      echo ECS_CLUSTER=cloud-design-cluster >> /etc/ecs/ecs.config
+#    user_data = base64encode(
+#     <<EOF
+#       #!/bin/bash
+#       # register
+#       echo ECS_CLUSTER=cloud-design-cluster >> /etc/ecs/ecs.config
 
-      %{ if var.enable_ebs_mounts ~}
-        sleep 10
-        mkdir -p /mnt/
-      %{ endif ~}
-    EOF
-  )
+#       %{ if var.enable_ebs_mounts ~}
+#         sleep 10
+#         mkdir -p /mnt/
+#       %{ endif ~}
+#     EOF
+#   )
 
-  key_name = aws_key_pair.my_key.key_name
+#   # key_name = aws_key_pair.my_key.key_name
 
-  tags = { "Name" = "cloud-design-ecs-lt" }
-}
+#   tags = { "Name" = "cloud-design-ecs-lt" }
+# }
 
 resource "aws_autoscaling_group" "ecs_asg" {
   name                = "cloud-design-ecs-asg"

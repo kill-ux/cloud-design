@@ -23,8 +23,8 @@ module "iam" {
 module "ecs" {
   source                    = "./modules/aws/ecs"
   ecs_execution_role_arn    = module.iam.ecs_execution_role_arn
-  ecs_instance_profile_name = module.iam.ecs_instance_profile_name
-  ecs_instance_sg_id        = module.ecs_instance_sg.id
+  # ecs_instance_profile_name = module.iam.ecs_instance_profile_name
+  # ecs_instance_sg_id        = module.ecs_instance_sg.id
   private_subnet_ids        = module.vpc.private_subnet_ids
   public_subnet_ids         = module.vpc.public_subnet_ids
   desired_capacity = 6

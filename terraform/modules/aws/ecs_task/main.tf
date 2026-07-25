@@ -1,3 +1,35 @@
+resource "aws_launch_template" "ecs_lt" {
+  name_prefix   = "cloud-design-ecs-"
+  image_id      = data.aws_ssm_parameter.ecs_ami.value
+  instance_type = "t3.micro"
+
+  iam_instance_profile {
+    name = var.ecs_instance_profile_name
+  }
+
+  vpc_security_group_ids = [var.ecs_instance_sg_id]
+
+  user_data = base64encode(
+    <<EOF
+      #!/bin/bash
+      # register
+      echo ECS_CLUSTER=cloud-design-cluster >> /etc/ecs/ecs.config
+
+      %{if var.enable_ebs_mounts~}
+        sleep 10
+        mkdir -p /mnt/${var.task_name}
+        mount ${var.device_name} /mnt/${var.task_name}
+        chmod 777 /mnt/${var.task_name}
+        echo '${var.device_name} /mnt/${var.task_name} ext4 defaults,nofail 0 2' >> /etc/fstab
+      %{endif~}
+    EOF
+  )
+
+  # key_name = aws_key_pair.my_key.key_name
+
+  tags = { "Name" = "cloud-design-ecs-lt" }
+}
+
 
 # CloudWatch Log Group
 resource "aws_cloudwatch_log_group" "task_logs" {
@@ -44,6 +76,14 @@ resource "aws_ecs_task_definition" "task" {
     }
   ])
 
+  dynamic "volume" {
+    for_each = var.enable_ebs_mounts ? [1] : []
+    content {
+      name      = "${var.task_name}-volume"
+      host_path = "/mnt/${var.task_name}"
+    }
+  }
+
   tags = merge(var.tags, { "Name" = "${var.task_name}-task-def" })
 }
 
@@ -58,7 +98,7 @@ resource "aws_ecs_service" "service" {
   deployment_maximum_percent         = 100
   deployment_minimum_healthy_percent = 0
   availability_zone_rebalancing      = "DISABLED"
-  force_delete = true
+  force_delete                       = true
 
   capacity_provider_strategy {
     capacity_provider = var.capacity_provider_name
