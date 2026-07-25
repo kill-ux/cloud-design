@@ -9,19 +9,32 @@ resource "aws_launch_template" "ecs_lt" {
 
   vpc_security_group_ids = [var.ecs_instance_sg_id]
 
-  user_data = base64encode(
-    <<EOF
+  user_data = base64encode(<<EOF
       #!/bin/bash
-      # register
+      # Register with ECS Cluster
       echo ECS_CLUSTER=cloud-design-cluster >> /etc/ecs/ecs.config
 
       %{if var.enable_ebs_mounts~}
-        sleep 10
-        file -s /dev/${var.device_name} | grep -q "data" && mkfs -t ext4 /dev/${var.device_name}
+      sleep 10
+
+      # 1. Install nvme-cli if missing so 'nvme list' works
+      which nvme >/dev/null 2>&1 || yum install -p nvme-cli -y
+
+      # 2. Get device path using nvme list (Use $DEVICE, not Terraform syntax)
+      DEVICE=$(nvme list | grep -i "${var.device_name}" | awk '{print $1}')
+
+      if [ -n "$DEVICE" ]; then
+        # 3. Format only if raw/unformatted (protects existing database files)
+        file -s $DEVICE | grep -q "data" && mkfs -t ext4 $DEVICE
+
+        # 4. Create mount point & set permissions for non-root DB container user
         mkdir -p /mnt/${var.task_name}
-        mount /dev/${var.device_name} /mnt/${var.task_name}
+        mount $DEVICE /mnt/${var.task_name}
         chmod 777 /mnt/${var.task_name}
-        echo '${var.device_name} /mnt/${var.task_name} ext4 defaults,nofail 0 2' >> /etc/fstab
+
+        # 5. Persist mount in fstab (double quotes allow $DEVICE expansion)
+        echo "$DEVICE /mnt/${var.task_name} ext4 defaults,nofail 0 2" >> /etc/fstab
+      fi
       %{endif~}
     EOF
   )

@@ -368,7 +368,7 @@ module "inventory_db_service" {
   ecs_instance_sg_id              = module.ecs_instance_sg.id
 
   enable_ebs_mounts = true
-  device_name = module.inventory_db_volume.device_name
+  device_name       = basename(module.billing_db_volume.device_name)
 
   subnets         = module.vpc.private_subnet_ids
   security_groups = [module.inventory_db_sg.id]
@@ -433,9 +433,6 @@ module "billing_service" {
   service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
   ecs_instance_profile_name       = module.iam.ecs_instance_profile_name
   ecs_instance_sg_id              = module.ecs_instance_sg.id
-
-  enable_ebs_mounts = true
-  device_name = module.billing_db_volume.device_name
 
   subnets         = module.vpc.private_subnet_ids
   security_groups = [module.billing_sg.id]
@@ -546,6 +543,9 @@ module "billing_db_service" {
   memory                   = 256
   desired_count            = 1
   enable_distinct_instance = true
+
+  enable_ebs_mounts = true
+  device_name       = basename(module.billing_db_volume.device_name)
 
   environment_variables = [
     {
