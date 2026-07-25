@@ -40,3 +40,9 @@ variable "min_size" {
   description = "Min size of the autoscaling group"
   type        = number
 }
+
+variable "enable_ebs_mounts" {
+  description = "Enable EBS mounts for ECS instances"
+  type        = bool
+  default     = false
+}

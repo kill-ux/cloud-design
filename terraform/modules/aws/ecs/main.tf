@@ -1,6 +1,3 @@
-
-
-
 resource "aws_ecs_cluster" "cloud_design_cluster" {
   name = "cloud-design-cluster"
 
@@ -36,9 +33,15 @@ resource "aws_launch_template" "ecs_lt" {
 
   vpc_security_group_ids = [var.ecs_instance_sg_id]
 
-  user_data = base64encode(<<-EOF
+   user_data = base64encode(<<-EOF
       #!/bin/bash
+      # register
       echo ECS_CLUSTER=cloud-design-cluster >> /etc/ecs/ecs.config
+
+      %{ if var.enable_ebs_mounts ~}
+        sleep 10
+        mkdir -p /mnt/
+      %{ endif ~}
     EOF
   )
 

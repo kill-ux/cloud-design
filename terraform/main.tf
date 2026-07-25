@@ -32,3 +32,29 @@ module "ecs" {
   max_size = 8
   service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
 }
+
+module "inventory_db_volume" {
+  source            = "./modules/aws/ebs"
+  device_name       = "/dev/sdh"
+  availability_zone = module.vpc.availability_zone
+  ebs_size          = 10
+  ebs_type          = "gp3"
+  instance_id       = module.ecs.ecs_instance_id
+
+  tags = {
+    Name = "inventory-db-volume"
+  }
+}
+
+module "billing_db_volume" {
+  source            = "./modules/aws/ebs"
+  device_name       = "/dev/sdi"
+  availability_zone = module.vpc.availability_zone
+  ebs_size          = 10
+  ebs_type          = "gp3"
+  instance_id       = module.ecs.ecs_instance_id
+
+  tags = {
+    Name = "billing_db_volume"
+  }
+}
