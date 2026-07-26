@@ -9,6 +9,9 @@
         "ecr": "Database",
         "iam": "Admin",
         "ebs": "Migrations",
-        "ecs_db_instance": "Database"
+        "ecs_db_instance": "Database",
+        "cognito" : "admin",
+        "ecs_task": "Custom",
+        "security_group": "Core",
     },
 }

@@ -72,3 +72,10 @@ module "billing_db_volume" {
   instance_id       = module.billing_db_instance.instance_id
   tags              = { Name = "billing_db_volume" }
 }
+
+
+module "cognito" {
+  source         = "./modules/aws/cognito"
+  aws_region     = var.aws_region
+  alb_dns_name = module.alb.alb_dns_name
+}
