@@ -41,8 +41,8 @@ variable "min_size" {
   type        = number
 }
 
-variable "enable_ebs_mounts" {
-  description = "Enable EBS mounts for ECS instances"
-  type        = bool
-  default     = false
+variable "device_name" {
+  description = "The device name to expose to the EC2 instance (e.g., /dev/sdh)."
+  default     = ""
+  type        = string
 }

@@ -41,8 +41,31 @@ resource "aws_ecs_task_definition" "task" {
           "awslogs-stream-prefix" = "ecs"
         }
       }
+      mountPoints = var.enable_ebs_mounts ? [
+        {
+          sourceVolume  = "${var.task_name}-volume"
+          containerPath = "/var/lib/postgresql/main"
+          readOnly      = false
+        }
+      ] : []
     }
   ])
+
+  dynamic "volume" {
+    for_each = var.enable_ebs_mounts ? [1] : []
+    content {
+      name      = "${var.task_name}-volume"
+      host_path = "/mnt/${var.task_name}/pgdata"
+    }
+  }
+
+  dynamic "placement_constraints" {
+    for_each = var.placement_constraint_expression != "" ? [1] : []
+    content {
+      type       = "memberOf"
+      expression = var.placement_constraint_expression
+    }
+  }
 
   tags = merge(var.tags, { "Name" = "${var.task_name}-task-def" })
 }
@@ -58,12 +81,17 @@ resource "aws_ecs_service" "service" {
   deployment_maximum_percent         = 100
   deployment_minimum_healthy_percent = 0
   availability_zone_rebalancing      = "DISABLED"
-  force_delete = true
+  force_delete                       = true
 
-  capacity_provider_strategy {
-    capacity_provider = var.capacity_provider_name
-    weight            = 100
-    base              = 0
+  launch_type = var.placement_constraint_expression != "" ? "EC2" : null
+
+  dynamic "capacity_provider_strategy" {
+    for_each = var.placement_constraint_expression == "" ? [1] : []
+    content {
+      capacity_provider = var.capacity_provider_name
+      weight            = 100
+      base              = 0
+    }
   }
 
   network_configuration {
