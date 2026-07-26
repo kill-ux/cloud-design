@@ -1,49 +1,3 @@
-resource "aws_launch_template" "ecs_lt" {
-  name_prefix   = "cloud-design-ecs-"
-  image_id      = data.aws_ssm_parameter.ecs_ami.value
-  instance_type = "t3.micro"
-
-  iam_instance_profile {
-    name = var.ecs_instance_profile_name
-  }
-
-  vpc_security_group_ids = [var.ecs_instance_sg_id]
-
-  user_data = base64encode(<<EOF
-      #!/bin/bash
-      # Register with ECS Cluster
-      echo ECS_CLUSTER=cloud-design-cluster >> /etc/ecs/ecs.config
-
-      %{if var.enable_ebs_mounts~}
-      sleep 10
-
-      # 1. Install nvme-cli if missing so 'nvme list' works
-      which nvme >/dev/null 2>&1 || yum install -p nvme-cli -y
-
-      # 2. Get device path using nvme list (Use $DEVICE, not Terraform syntax)
-      DEVICE=$(nvme list | grep -i "${var.device_name}" | awk '{print $1}')
-
-      if [ -n "$DEVICE" ]; then
-        # 3. Format only if raw/unformatted (protects existing database files)
-        file -s $DEVICE | grep -q "data" && mkfs -t ext4 $DEVICE
-
-        # 4. Create mount point & set permissions for non-root DB container user
-        mkdir -p /mnt/${var.task_name}
-        mount $DEVICE /mnt/${var.task_name}
-        chmod 777 /mnt/${var.task_name}
-
-        # 5. Persist mount in fstab (double quotes allow $DEVICE expansion)
-        echo "$DEVICE /mnt/${var.task_name} ext4 defaults,nofail 0 2" >> /etc/fstab
-      fi
-      %{endif~}
-    EOF
-  )
-
-  # key_name = aws_key_pair.my_key.key_name
-
-  tags = { "Name" = "cloud-design-ecs-lt" }
-}
-
 
 # CloudWatch Log Group
 resource "aws_cloudwatch_log_group" "task_logs" {
@@ -87,6 +41,13 @@ resource "aws_ecs_task_definition" "task" {
           "awslogs-stream-prefix" = "ecs"
         }
       }
+      mountPoints = var.enable_ebs_mounts ? [
+        {
+          sourceVolume  = "${var.task_name}-volume"
+          containerPath = "/var/lib/postgresql/main"
+          readOnly      = false
+        }
+      ] : []
     }
   ])
 
@@ -94,7 +55,15 @@ resource "aws_ecs_task_definition" "task" {
     for_each = var.enable_ebs_mounts ? [1] : []
     content {
       name      = "${var.task_name}-volume"
-      host_path = "/mnt/${var.task_name}"
+      host_path = "/mnt/${var.task_name}/pgdata"
+    }
+  }
+
+  dynamic "placement_constraints" {
+    for_each = var.placement_constraint_expression != "" ? [1] : []
+    content {
+      type       = "memberOf"
+      expression = var.placement_constraint_expression
     }
   }
 
@@ -114,10 +83,15 @@ resource "aws_ecs_service" "service" {
   availability_zone_rebalancing      = "DISABLED"
   force_delete                       = true
 
-  capacity_provider_strategy {
-    capacity_provider = var.capacity_provider_name
-    weight            = 100
-    base              = 0
+  launch_type = var.placement_constraint_expression != "" ? "EC2" : null
+
+  dynamic "capacity_provider_strategy" {
+    for_each = var.placement_constraint_expression == "" ? [1] : []
+    content {
+      capacity_provider = var.capacity_provider_name
+      weight            = 100
+      base              = 0
+    }
   }
 
   network_configuration {

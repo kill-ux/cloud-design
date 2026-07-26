@@ -6,10 +6,10 @@ module "vpc" {
 }
 
 module "alb" {
-  source = "./modules/aws/alb"
-  alb_sg_id = module.alb_sg.id
+  source            = "./modules/aws/alb"
+  alb_sg_id         = module.alb_sg.id
   public_subnet_ids = module.vpc.public_subnet_ids
-  vpc_id = module.vpc.vpc_id
+  vpc_id            = module.vpc.vpc_id
 }
 
 module "ecr" {
@@ -21,40 +21,54 @@ module "iam" {
 }
 
 module "ecs" {
-  source                    = "./modules/aws/ecs"
-  ecs_execution_role_arn    = module.iam.ecs_execution_role_arn
-  # ecs_instance_profile_name = module.iam.ecs_instance_profile_name
-  # ecs_instance_sg_id        = module.ecs_instance_sg.id
-  private_subnet_ids        = module.vpc.private_subnet_ids
-  public_subnet_ids         = module.vpc.public_subnet_ids
-  desired_capacity = 6
-  min_size = 6
-  max_size = 8
+  source                          = "./modules/aws/ecs"
+  ecs_execution_role_arn          = module.iam.ecs_execution_role_arn
+  ecs_instance_profile_name       = module.iam.ecs_instance_profile_name
+  ecs_instance_sg_id              = module.ecs_instance_sg.id
+  private_subnet_ids              = module.vpc.private_subnet_ids
+  public_subnet_ids               = module.vpc.public_subnet_ids
+  desired_capacity                = 4
+  min_size                        = 4
+  max_size                        = 8
   service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
+}
+
+module "inventory_db_instance" {
+  source                    = "./modules/aws/ecs_db_instance"
+  host_name                 = "inventory-db"
+  iam_instance_profile_name = module.iam.ecs_instance_profile_name
+  security_group_id         = module.ecs_instance_sg.id
+  subnet_id                 = module.vpc.private_subnet_ids[0]
+  cluster_name              = module.ecs.cluster_name
+  device_name               = "sdh"
 }
 
 module "inventory_db_volume" {
   source            = "./modules/aws/ebs"
   device_name       = "/dev/sdh"
-  availability_zone = module.vpc.availability_zone
+  availability_zone = module.vpc.private_subnet_azs[0]
   ebs_size          = 10
   ebs_type          = "gp3"
-  instance_id       = module.ecs.ecs_instance_id
+  instance_id       = module.inventory_db_instance.instance_id
+  tags              = { Name = "inventory-db-volume" }
+}
 
-  tags = {
-    Name = "inventory-db-volume"
-  }
+module "billing_db_instance" {
+  source                    = "./modules/aws/ecs_db_instance"
+  host_name                 = "billing-db"
+  iam_instance_profile_name = module.iam.ecs_instance_profile_name
+  security_group_id         = module.ecs_instance_sg.id
+  subnet_id                 = module.vpc.private_subnet_ids[0]
+  cluster_name              = module.ecs.cluster_name
+  device_name               = "sdi"
 }
 
 module "billing_db_volume" {
   source            = "./modules/aws/ebs"
   device_name       = "/dev/sdi"
-  availability_zone = module.vpc.availability_zone
+  availability_zone = module.vpc.private_subnet_azs[0]
   ebs_size          = 10
   ebs_type          = "gp3"
-  instance_id       = module.ecs.ecs_instance_id
-
-  tags = {
-    Name = "billing_db_volume"
-  }
+  instance_id       = module.billing_db_instance.instance_id
+  tags              = { Name = "billing_db_volume" }
 }

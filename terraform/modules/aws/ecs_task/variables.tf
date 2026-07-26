@@ -181,24 +181,14 @@ variable "scale_in_cooldown" {
   description = "Cooldown period in seconds after a scale-in activity"
 }
 
-variable "ecs_instance_profile_name" {
-  description = "ECS instance profile name"
-  type        = string
-}
-
-variable "ecs_instance_sg_id" {
-  description = "SG for EC2"
-  type        = string
-}
-
 variable "enable_ebs_mounts" {
   description = "Enable EBS mounts for ECS instances"
   type        = bool
   default     = false
 }
 
-variable "device_name" {
-  description = "The device name to expose to the EC2 instance (e.g., /dev/sdh)."
-  default     = ""
+variable "placement_constraint_expression" {
+  description = "Optional memberOf expression, e.g. attribute:role == inventory-db-host"
   type        = string
+  default     = ""
 }
