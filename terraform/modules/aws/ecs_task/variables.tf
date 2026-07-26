@@ -1,4 +1,3 @@
-# modules/aws/ecs_task/variables.tf
 
 variable "task_name" {
   description = "Name of the ECS task (used as family name)"
@@ -180,4 +179,16 @@ variable "scale_in_cooldown" {
   type        = number
   default     = 300
   description = "Cooldown period in seconds after a scale-in activity"
+}
+
+variable "enable_ebs_mounts" {
+  description = "Enable EBS mounts for ECS instances"
+  type        = bool
+  default     = false
+}
+
+variable "placement_constraint_expression" {
+  description = "Optional memberOf expression, e.g. attribute:role == inventory-db-host"
+  type        = string
+  default     = ""
 }

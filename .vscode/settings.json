@@ -9,5 +9,6 @@
         "ecr": "Database",
         "iam": "Admin",
         "ebs": "Migrations",
-    }
+        "ecs_db_instance": "Database"
+    },
 }

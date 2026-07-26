@@ -17,10 +17,11 @@ data "aws_ssm_parameter" "ecs_ami" {
   name = "/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id"
 }
 
-resource "aws_key_pair" "my_key" {
-  key_name   = "my-ecs-key"
-  public_key = file(".keys/id_ecs.pub")
-}
+# resource "aws_key_pair" "my_key" {
+#   key_name   = "my-ecs-key"
+#   public_key = file(".keys/id_ecs.pub")
+# }
+
 
 resource "aws_launch_template" "ecs_lt" {
   name_prefix   = "cloud-design-ecs-"
@@ -33,19 +34,11 @@ resource "aws_launch_template" "ecs_lt" {
 
   vpc_security_group_ids = [var.ecs_instance_sg_id]
 
-   user_data = base64encode(<<-EOF
+  user_data = base64encode(<<-EOF
       #!/bin/bash
-      # register
       echo ECS_CLUSTER=cloud-design-cluster >> /etc/ecs/ecs.config
-
-      %{ if var.enable_ebs_mounts ~}
-        sleep 10
-        mkdir -p /mnt/
-      %{ endif ~}
     EOF
   )
-
-  key_name = aws_key_pair.my_key.key_name
 
   tags = { "Name" = "cloud-design-ecs-lt" }
 }
