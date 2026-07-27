@@ -1,0 +1,65 @@
+Security: Incorporate security best practices into your architecture, such as encrypting data at rest and in transit
+
+
+Monitor your usage: Regularly check your cloud provider’s billing dashboard to keep track of your usage and spending. Set up billing alerts to notify you when your spending exceeds a certain threshold.
+
+Leverage cost management tools: Many cloud providers offer cost management tools and services to help you optimize your spending. Use these tools to analyze your usage patterns and identify opportunities for cost savings.
+
+
+Monitoring and logging
+
+Set up monitoring and logging tools to track the performance and health of your application. Use tools like CloudWatch, Prometheus, Grafana, and ELK stack to visualize metrics and logs.
+
+
+
+
+
+
+
+################################################
+
+
+Security
+
+Implement security best practices such as using AWS Certificate Manager for HTTPS, securing API endpoints with Amazon API Gateway, regularly scanning for vulnerabilities with AWS Inspector, and implementing managed authentication for publicly accessible applications with AWS Cognito or similar service. Ensure that the databases and private resources are secure and accessible only from the AWS VPC.
+#
+Documentation
+
+Create a README.md file that provides comprehensive documentation for your architecture, which must include well-structured diagrams, thorough descriptions of components, and an explanation of your design decisions, presented in a clear and concise manner. Make sure it contains all the necessary information about the solution (prerequisites, setup, configuration, usage, …). This file must be submitted as part of the solution for the project.
+#
+Bonus
+
+If you complete the mandatory part successfully and you still have free time, you can implement anything that you feel deserves to be a bonus, for example:
+
+    Use your own crud-master, play-with-containers, and orchestrator solution instead of the provided ones.
+
+    Use Function as a Service (FaaS) in your solution.
+
+    Use Content Delivery Network (CDN) to optimize your solution.
+
+    Implement alerting systems to ensure your application runs smoothly.
+
+Challenge yourself!
+#
+Tips
+
+Before starting this project, you should know the following:
+
+    Basic DevOps concepts and practices.
+    Familiarity with containerization and orchestration tools, such as Docker and Kubernetes.
+    Understanding of AWS cloud platform.
+    Familiarity with Terraform as an Infrastructure as Code (IaC) tools.
+    Knowledge of monitoring and logging tools, such as Prometheus, Grafana, and ELK stack.
+
+    Any lack of understanding of the concepts in this project may affect the difficulty of future projects.
+
+    Be curious and never stop searching!
+
+#
+Submission and audit
+
+Upon completing this project, you should submit the following:
+
+    Your documentation in the README.md file.
+    Source code for the microservices and any scripts used for deployment.
+    Configuration files for your Infrastructure as Code (IaC), containerization, and orchestration tools.
