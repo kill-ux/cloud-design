@@ -18,27 +18,65 @@ module "vpc_endpoints_sg" {
   tags = { "Name" : "vpc_endpoints_sg" }
 }
 
+module "aws_gateway_sg" {
+  source      = "./modules/aws/security_group"
+  name        = "aws_gateway_sg"
+  description = "Security group for API Gateway VPC Link"
+  vpc_id      = module.vpc.vpc_id
 
-# ===== ALB Security Group =====
+  egress_rules = [
+    {
+      description = "Allow HTTP outbound to VPC"
+      from_port   = 80
+      to_port     = 80
+      protocol    = "tcp"
+      cidr_ipv4   = var.vpc_cidr
+    }
+  ]
+}
+
+# # ===== ALB Security Group =====
 module "alb_sg" {
   source = "./modules/aws/security_group"
 
   name        = "alb_sg"
-  description = "Allow inbound internet traffic to ALB"
+  description = "Allow inbound Aws API Gateway  traffic to ALB"
   vpc_id      = module.vpc.vpc_id
 
   ingress_rules = [
     {
-      description = "Allow HTTP from internet"
-      from_port   = 80
-      protocol    = "tcp"
-      to_port     = 80
-      cidr_ipv4   = "0.0.0.0/0"
+      description                  = "Allow HTTP from Aws API Gateway "
+      from_port                    = 80
+      protocol                     = "tcp"
+      to_port                      = 80
+      referenced_security_group_id = module.aws_gateway_sg.id
     }
   ]
 
   tags = { "Component" = "alb" }
 }
+
+
+# # ===== ALB Security Group =====
+# module "alb_sg" {
+#   source = "./modules/aws/security_group"
+
+#   name        = "alb_sg"
+#   description = "Allow inbound internet traffic to ALB"
+#   vpc_id      = module.vpc.vpc_id
+
+#   ingress_rules = [
+#     {
+#       description = "Allow HTTP from internet"
+#       from_port   = 80
+#       protocol    = "tcp"
+#       to_port     = 80
+#       cidr_ipv4   = "0.0.0.0/0"
+#     }
+#   ]
+
+#   tags = { "Component" = "alb" }
+# }
 
 
 # ===== ECS Instance Security Group =====
@@ -112,11 +150,11 @@ module "api_gateway_service" {
   capacity_provider_name          = module.ecs.capacity_provider_name
   execution_role_arn              = module.iam.ecs_execution_role_arn
   service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
-  subnets         = module.vpc.private_subnet_ids
-  security_groups = [module.gateway_sg.id]
-  cpu             = 128
-  memory          = 256
-  desired_count   = 1
+  subnets                         = module.vpc.private_subnet_ids
+  security_groups                 = [module.gateway_sg.id]
+  cpu                             = 128
+  memory                          = 256
+  desired_count                   = 1
 
   enable_autoscaling = true
   scaling_metric     = "requests"
@@ -221,8 +259,8 @@ module "rabbitmq_service" {
   capacity_provider_name          = module.ecs.capacity_provider_name
   execution_role_arn              = module.iam.ecs_execution_role_arn
   service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
-  subnets         = module.vpc.private_subnet_ids
-  security_groups = [module.rabbitmq_sg.id]
+  subnets                         = module.vpc.private_subnet_ids
+  security_groups                 = [module.rabbitmq_sg.id]
 
   cpu           = 128
   memory        = 256
@@ -277,8 +315,8 @@ module "inventory_service" {
   capacity_provider_name          = module.ecs.capacity_provider_name
   execution_role_arn              = module.iam.ecs_execution_role_arn
   service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
-  subnets         = module.vpc.private_subnet_ids
-  security_groups = [module.inventory_sg.id]
+  subnets                         = module.vpc.private_subnet_ids
+  security_groups                 = [module.inventory_sg.id]
 
   cpu           = 128
   memory        = 256
@@ -358,8 +396,8 @@ module "inventory_db_service" {
   # ecs_instance_profile_name       = module.iam.ecs_instance_profile_name
   # ecs_instance_sg_id              = module.ecs_instance_sg.id
 
-  enable_ebs_mounts = true
-  placement_constraint_expression =  "attribute:role == ${module.inventory_db_instance.placement_attribute}"
+  enable_ebs_mounts               = true
+  placement_constraint_expression = "attribute:role == ${module.inventory_db_instance.placement_attribute}"
 
   subnets         = module.vpc.private_subnet_ids
   security_groups = [module.inventory_db_sg.id]
@@ -531,7 +569,7 @@ module "billing_db_service" {
   desired_count            = 1
   enable_distinct_instance = true
 
-  enable_ebs_mounts = true
+  enable_ebs_mounts               = true
   placement_constraint_expression = "attribute:role == ${module.billing_db_instance.placement_attribute}"
 
   environment_variables = [

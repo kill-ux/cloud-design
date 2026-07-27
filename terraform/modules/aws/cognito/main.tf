@@ -57,7 +57,10 @@ resource "aws_apigatewayv2_integration" "integration" {
   api_id             = aws_apigatewayv2_api.gateway.id
   integration_type   = "HTTP_PROXY"
   integration_method = "ANY"
-  integration_uri    = "http://${var.alb_dns_name}/{proxy}"
+
+  connection_type = "VPC_LINK"
+  connection_id = aws_apigatewayv2_vpc_link.alb_link.id
+  integration_uri    = var.alb_listener_arn
 }
 
 # 7. Protected Route
@@ -69,4 +72,10 @@ resource "aws_apigatewayv2_route" "protected_route" {
   authorizer_id      = aws_apigatewayv2_authorizer.cognito_auth.id
 
   target = "integrations/${aws_apigatewayv2_integration.integration.id}"
+}
+
+resource "aws_apigatewayv2_vpc_link" "alb_link" {
+  name               = "api-gateway-vpc-link"
+  security_group_ids = [var.security_group_id]
+  subnet_ids         = var.private_subnet_ids
 }

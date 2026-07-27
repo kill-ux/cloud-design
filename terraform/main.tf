@@ -6,10 +6,11 @@ module "vpc" {
 }
 
 module "alb" {
-  source            = "./modules/aws/alb"
-  alb_sg_id         = module.alb_sg.id
-  public_subnet_ids = module.vpc.public_subnet_ids
-  vpc_id            = module.vpc.vpc_id
+  source    = "./modules/aws/alb"
+  alb_sg_id = module.alb_sg.id
+  # public_subnet_ids = module.vpc.public_subnet_ids
+  private_subnet_ids = module.vpc.private_subnet_ids
+  vpc_id             = module.vpc.vpc_id
 }
 
 module "ecr" {
@@ -75,7 +76,10 @@ module "billing_db_volume" {
 
 
 module "cognito" {
-  source         = "./modules/aws/cognito"
-  aws_region     = var.aws_region
+  source       = "./modules/aws/cognito"
+  aws_region   = var.aws_region
   alb_dns_name = module.alb.alb_dns_name
+  security_group_id = module.aws_gateway_sg.id
+  private_subnet_ids = [module.vpc.private_subnet_ids[0]]
+  alb_listener_arn = module.alb.alb_listener_arn
 }
