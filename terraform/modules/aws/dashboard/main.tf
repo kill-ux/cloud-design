@@ -18,7 +18,7 @@ resource "aws_cloudwatch_dashboard" "ecs_central_dashboard" {
             ["AWS/ECS", "CPUUtilization", "ClusterName", var.ecs_cluster_name, "ServiceName", "rabbitmq-service", { "label" = "RabbitMQ" }],
             ["AWS/ECS", "CPUUtilization", "ClusterName", var.ecs_cluster_name, "ServiceName", "inventory-service", { "label" = "Inventory" }],
             ["AWS/ECS", "CPUUtilization", "ClusterName", var.ecs_cluster_name, "ServiceName", "inventory-db-service", { "label" = "Inventory DB" }],
-            ["AWS/ECS", "CPUUtilization", "ClusterName", var.ecs_cluster_name, "ServiceName", "billing-service5", { "label" = "Billing" }],
+            ["AWS/ECS", "CPUUtilization", "ClusterName", var.ecs_cluster_name, "ServiceName", "billing-service", { "label" = "Billing" }],
             ["AWS/ECS", "CPUUtilization", "ClusterName", var.ecs_cluster_name, "ServiceName", "billing-db-service", { "label" = "Billing DB" }]
           ]
         }
