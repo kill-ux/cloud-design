@@ -1,43 +1,20 @@
-resource "aws_secretsmanager_secret" "rabbitmq_credentials" {
-  name                    = "cloud-design/rabbitmq"
+resource "aws_secretsmanager_secret" "cloud_design_credentials" {
+  name                    = "cloud-design"
   recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret_version" "rabbitmq_credentials_val" {
-  secret_id = aws_secretsmanager_secret.rabbitmq_credentials.id
+  secret_id = aws_secretsmanager_secret.cloud_design_credentials.id
   secret_string = jsonencode({
-    username = var.rabbitmq_user
-    password = var.rabbitmq_password
+    rabbitmq_user     = var.rabbitmq_user
+    rabbitmq_password = var.rabbitmq_password
+
+    inventory_db_user     = var.inventory_db_user
+    inventory_db_password = var.inventory_db_password
+    inventory_db_name     = var.inventory_db_name
+
+    billing_db_user     = var.billing_db_user
+    billing_db_password = var.billing_db_password
+    billing_db_name     = var.billing_db_name
   })
 }
-
-
-resource "aws_secretsmanager_secret" "inventory_db_credentials" {
-  name                    = "cloud-design/inventory_db"
-  recovery_window_in_days = 0
-}
-
-resource "aws_secretsmanager_secret_version" "inventory_db_credentials_val" {
-  secret_id = aws_secretsmanager_secret.inventory_db_credentials.id
-  secret_string = jsonencode({
-    username = var.inventory_db_user
-    password = var.inventory_db_password
-    db_name  = var.inventory_db_name
-  })
-}
-
-
-resource "aws_secretsmanager_secret" "billing_db_credentials" {
-  name                    = "cloud-design/billing_db"
-  recovery_window_in_days = 0
-}
-
-resource "aws_secretsmanager_secret_version" "billing_db_credentials_val" {
-  secret_id = aws_secretsmanager_secret.billing_db_credentials.id
-  secret_string = jsonencode({
-    username = var.billing_db_user
-    password = var.billing_db_password
-    db_name  = var.billing_db_name
-  })
-}
-

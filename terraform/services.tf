@@ -182,11 +182,11 @@ module "api_gateway_service" {
   secrets = [
     {
       name      = "RABBITMQ_USER"
-      valueFrom = "${module.secrets.rabbitmq_credentials_arn}:username::"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:rabbitmq_user::"
     },
     {
       name      = "RABBITMQ_PASS"
-      valueFrom = "${module.secrets.rabbitmq_credentials_arn}:password::"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:rabbitmq_password::"
     },
   ]
 
@@ -251,11 +251,11 @@ module "rabbitmq_service" {
   secrets = [
     {
       name      = "RABBITMQ_USER"
-      valueFrom = "${module.secrets.rabbitmq_credentials_arn}:username::"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:rabbitmq_user::"
     },
     {
       name      = "RABBITMQ_PASS"
-      valueFrom = "${module.secrets.rabbitmq_credentials_arn}:password::"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:rabbitmq_password::"
     },
   ]
 }
@@ -311,15 +311,15 @@ module "inventory_service" {
   secrets = [
     {
       name      = "INVENTORY_DB_USER"
-      valueFrom = "${module.secrets.inventory_db_credentials_arn}:username::"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:inventory_db_user::"
     },
     {
       name      = "INVENTORY_DB_PASS"
-      valueFrom = "${module.secrets.inventory_db_credentials_arn}:password::"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:inventory_db_password::"
     },
     {
       name      = "INVENTORY_DB_NAME"
-      valueFrom = "${module.secrets.inventory_db_credentials_arn}:db_name::"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:inventory_db_name::"
     },
   ]
 
@@ -392,15 +392,15 @@ module "inventory_db_service" {
   secrets = [
     {
       name      = "DB_USER"
-      valueFrom = "${module.secrets.inventory_db_credentials_arn}:username::"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:inventory_db_user::"
     },
     {
       name      = "DB_PASS"
-      valueFrom = "${module.secrets.inventory_db_credentials_arn}:password::"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:inventory_db_password::"
     },
     {
       name      = "DB_NAME"
-      valueFrom = "${module.secrets.inventory_db_credentials_arn}:db_name::"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:inventory_db_name::"
     }
   ]
 
@@ -458,23 +458,23 @@ module "billing_service" {
   secrets = [
     {
       name      = "BILLING_DB_USER"
-      valueFrom = "${module.secrets.billing_db_credentials_arn}:username::"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:billing_db_user::"
     },
     {
       name      = "BILLING_DB_PASS"
-      valueFrom = "${module.secrets.billing_db_credentials_arn}:password::"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:billing_db_password::"
     },
     {
       name      = "BILLING_DB_NAME"
-      valueFrom = "${module.secrets.billing_db_credentials_arn}:db_name::"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:billing_db_name::"
     },
     {
       name      = "RABBITMQ_USER"
-      valueFrom = "${module.secrets.rabbitmq_credentials_arn}:username::"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:rabbitmq_user::"
     },
     {
       name      = "RABBITMQ_PASS"
-      valueFrom = "${module.secrets.rabbitmq_credentials_arn}:password::"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:rabbitmq_password::"
     },
 
   ]
@@ -561,15 +561,15 @@ module "billing_db_service" {
   secrets = [
     {
       name      = "DB_USER"
-      valueFrom = "${module.secrets.billing_db_credentials_arn}:username::"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:billing_db_user::"
     },
     {
       name      = "DB_PASS"
-      valueFrom = "${module.secrets.billing_db_credentials_arn}:password::"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:billing_db_password::"
     },
     {
       name      = "DB_NAME"
-      valueFrom = "${module.secrets.billing_db_credentials_arn}:db_name::"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:billing_db_name::"
     }
   ]
 }
