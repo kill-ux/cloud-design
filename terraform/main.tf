@@ -76,10 +76,40 @@ module "billing_db_volume" {
 
 
 module "cognito" {
-  source       = "./modules/aws/cognito"
-  aws_region   = var.aws_region
-  alb_dns_name = module.alb.alb_dns_name
-  security_group_id = module.aws_gateway_sg.id
+  source             = "./modules/aws/cognito"
+  aws_region         = var.aws_region
+  alb_dns_name       = module.alb.alb_dns_name
+  security_group_id  = module.aws_gateway_sg.id
   private_subnet_ids = [module.vpc.private_subnet_ids[0]]
-  alb_listener_arn = module.alb.alb_listener_arn
+  alb_listener_arn   = module.alb.alb_listener_arn
+}
+
+module "secrets" {
+  source            = "./modules/aws/secrets"
+  rabbitmq_user     = var.rabbitmq_user
+  rabbitmq_password = var.rabbitmq_password
+
+  inventory_db_user     = var.inventory_db_user
+  inventory_db_password = var.inventory_db_password
+  inventory_db_name     = var.inventory_db_name
+
+  billing_db_user     = var.billing_db_user
+  billing_db_password = var.billing_db_password
+  billing_db_name     = var.billing_db_name
+}
+
+resource "aws_budgets_budget" "monthly_cost_alert" {
+  name = "monthly-budget-alert"
+  budget_type = "COST"
+  limit_amount = "50"
+  limit_unit = "USD"
+  time_unit = "MONTHLY"
+
+  notification {
+    comparison_operator = "GREATER_THAN"
+    threshold = "80"
+    threshold_type = "PERCENTAGE"
+    notification_type = "ACTUAL"
+    subscriber_email_addresses = ["mustaphaboutoubdev@gmail.com"]
+  }
 }

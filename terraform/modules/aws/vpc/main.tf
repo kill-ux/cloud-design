@@ -116,53 +116,59 @@ resource "aws_vpc_endpoint" "s3" {
   tags = { "Name" = "cloud-design-s3-endpoint" }
 }
 
-#########################################""
-#########################################""
-#########################################""
-#########################################""
-#########################################""
+resource "aws_vpc_endpoint" "ecs" {
+  vpc_id              = aws_vpc.cloud-design-vpc.id
+  service_name        = "com.amazonaws.${var.aws_region}.ecs"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = [for s in aws_subnet.private : s.id]
+  security_group_ids  = [var.vpc_endpoints_sg_id]
+  private_dns_enabled = true
 
- resource "aws_vpc_endpoint" "ecs" {                                               
-      vpc_id              = aws_vpc.cloud-design-vpc.id                               
-      service_name        = "com.amazonaws.${var.aws_region}.ecs"                     
-      vpc_endpoint_type   = "Interface"                                               
-      subnet_ids          = [for s in aws_subnet.private : s.id]                      
-      security_group_ids  = [var.vpc_endpoints_sg_id]                                 
-      private_dns_enabled = true                                                      
-                                                                                      
-      tags = { "Name" = "cloud-design-ecs-endpoint" }                                 
-    }                                                                                 
-                                                                                      
-    resource "aws_vpc_endpoint" "ecs_telemetry" {                                     
-      vpc_id              = aws_vpc.cloud-design-vpc.id                               
-      service_name        = "com.amazonaws.${var.aws_region}.ecs-telemetry"           
-      vpc_endpoint_type   = "Interface"                                               
-      subnet_ids          = [for s in aws_subnet.private : s.id]                      
-      security_group_ids  = [var.vpc_endpoints_sg_id]                                 
-      private_dns_enabled = true                                                      
-                                                                                      
-      tags = { "Name" = "cloud-design-ecs-telemetry-endpoint" }                       
-    }                                                                                 
-                                                                                      
-    resource "aws_vpc_endpoint" "ecs_agent" {                                         
-      vpc_id              = aws_vpc.cloud-design-vpc.id                               
-      service_name        = "com.amazonaws.${var.aws_region}.ecs-agent"               
-      vpc_endpoint_type   = "Interface"                                               
-      subnet_ids          = [for s in aws_subnet.private : s.id]                      
-      security_group_ids  = [var.vpc_endpoints_sg_id]                                 
-      private_dns_enabled = true                                                      
-                                                                                      
-      tags = { "Name" = "cloud-design-ecs-agent-endpoint" }                           
-    }                                                                                 
-                                                                                      
-    resource "aws_vpc_endpoint" "logs" {                                              
-      vpc_id              = aws_vpc.cloud-design-vpc.id                               
-      service_name        = "com.amazonaws.${var.aws_region}.logs"                    
-      vpc_endpoint_type   = "Interface"                                               
-      subnet_ids          = [for s in aws_subnet.private : s.id]                      
-      security_group_ids  = [var.vpc_endpoints_sg_id]                                 
-      private_dns_enabled = true                                                      
-                                                                                      
-      tags = { "Name" = "cloud-design-logs-endpoint" }                                
-    }                                                                                 
-    
+  tags = { "Name" = "cloud-design-ecs-endpoint" }
+}
+
+resource "aws_vpc_endpoint" "ecs_telemetry" {
+  vpc_id              = aws_vpc.cloud-design-vpc.id
+  service_name        = "com.amazonaws.${var.aws_region}.ecs-telemetry"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = [for s in aws_subnet.private : s.id]
+  security_group_ids  = [var.vpc_endpoints_sg_id]
+  private_dns_enabled = true
+
+  tags = { "Name" = "cloud-design-ecs-telemetry-endpoint" }
+}
+
+resource "aws_vpc_endpoint" "ecs_agent" {
+  vpc_id              = aws_vpc.cloud-design-vpc.id
+  service_name        = "com.amazonaws.${var.aws_region}.ecs-agent"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = [for s in aws_subnet.private : s.id]
+  security_group_ids  = [var.vpc_endpoints_sg_id]
+  private_dns_enabled = true
+
+  tags = { "Name" = "cloud-design-ecs-agent-endpoint" }
+}
+
+resource "aws_vpc_endpoint" "logs" {
+  vpc_id              = aws_vpc.cloud-design-vpc.id
+  service_name        = "com.amazonaws.${var.aws_region}.logs"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = [for s in aws_subnet.private : s.id]
+  security_group_ids  = [var.vpc_endpoints_sg_id]
+  private_dns_enabled = true
+
+  tags = { "Name" = "cloud-design-logs-endpoint" }
+}
+
+resource "aws_vpc_endpoint" "secretsmanager" {
+  vpc_id              = aws_vpc.cloud-design-vpc.id
+  service_name        = "com.amazonaws.${var.aws_region}.secretsmanager"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = [for s in aws_subnet.private : s.id]
+  security_group_ids  = [var.vpc_endpoints_sg_id]
+  private_dns_enabled = true
+
+  tags = {
+    Name = "cloud-design-secretsmanager-vpce"
+  }
+}
