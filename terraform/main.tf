@@ -88,4 +88,12 @@ module "secrets" {
   source            = "./modules/aws/secrets"
   rabbitmq_user     = var.rabbitmq_user
   rabbitmq_password = var.rabbitmq_password
+
+  inventory_db_user     = var.inventory_db_user
+  inventory_db_password = var.inventory_db_password
+  inventory_db_name     = var.inventory_db_name
+
+  billing_db_user     = var.billing_db_user
+  billing_db_password = var.billing_db_password
+  billing_db_name     = var.billing_db_name
 }

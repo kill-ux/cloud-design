@@ -175,15 +175,19 @@ module "api_gateway_service" {
     {
       name  = "APIGATEWAY_PORT"
       value = "3000"
-    },
-    {
-      name  = "RABBITMQ_USER"
-      value = var.rabbitmq_user
-    },
-    {
-      name  = "RABBITMQ_PASS"
-      value = var.rabbitmq_password
     }
+  ]
+
+
+  secrets = [
+    {
+      name      = "RABBITMQ_USER"
+      valueFrom = "${module.secrets.rabbitmq_credentials_arn}:username::"
+    },
+    {
+      name      = "RABBITMQ_PASS"
+      valueFrom = "${module.secrets.rabbitmq_credentials_arn}:password::"
+    },
   ]
 
   depends_on = [module.alb, module.billing_service, module.inventory_service]
@@ -304,6 +308,21 @@ module "inventory_service" {
   target_value       = 70
   max_capacity       = 2
 
+  secrets = [
+    {
+      name      = "INVENTORY_DB_USER"
+      valueFrom = "${module.secrets.inventory_db_credentials_arn}:username::"
+    },
+    {
+      name      = "INVENTORY_DB_PASS"
+      valueFrom = "${module.secrets.inventory_db_credentials_arn}:password::"
+    },
+    {
+      name      = "INVENTORY_DB_NAME"
+      valueFrom = "${module.secrets.inventory_db_credentials_arn}:db_name::"
+    },
+  ]
+
   environment_variables = [
     {
       name  = "INVENTORY_APP_PORT"
@@ -317,18 +336,6 @@ module "inventory_service" {
       name  = "INVENTORY_DB_PORT"
       value = "5432"
     },
-    {
-      name  = "INVENTORY_DB_USER"
-      value = var.inventory_db_user
-    },
-    {
-      name  = "INVENTORY_DB_PASS"
-      value = var.inventory_db_password
-    },
-    {
-      name  = "INVENTORY_DB_NAME"
-      value = var.inventory_db_name
-    }
   ]
 
   depends_on = [module.inventory_db_service]
@@ -370,8 +377,6 @@ module "inventory_db_service" {
   capacity_provider_name          = module.ecs.capacity_provider_name
   execution_role_arn              = module.iam.ecs_execution_role_arn
   service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
-  # ecs_instance_profile_name       = module.iam.ecs_instance_profile_name
-  # ecs_instance_sg_id              = module.ecs_instance_sg.id
 
   enable_ebs_mounts               = true
   placement_constraint_expression = "attribute:role == ${module.inventory_db_instance.placement_attribute}"
@@ -460,6 +465,10 @@ module "billing_service" {
       valueFrom = "${module.secrets.billing_db_credentials_arn}:password::"
     },
     {
+      name      = "BILLING_DB_NAME"
+      valueFrom = "${module.secrets.billing_db_credentials_arn}:db_name::"
+    },
+    {
       name      = "RABBITMQ_USER"
       valueFrom = "${module.secrets.rabbitmq_credentials_arn}:username::"
     },
@@ -467,6 +476,7 @@ module "billing_service" {
       name      = "RABBITMQ_PASS"
       valueFrom = "${module.secrets.rabbitmq_credentials_arn}:password::"
     },
+
   ]
 
 
