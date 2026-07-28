@@ -12,6 +12,7 @@ resource "aws_cloudwatch_dashboard" "ecs_central_dashboard" {
         height = 6
         properties = {
           title = "ECS Services - CPU Utilization (%)"
+          region = data.aws_region.current.region
           metrics = [
             ["AWS/ECS", "CPUUtilization", "ClusterName", var.ecs_cluster_name, "ServiceName", "api-gateway-service", { "label" = "API Gateway" }],
             ["AWS/ECS", "CPUUtilization", "ClusterName", var.ecs_cluster_name, "ServiceName", "rabbitmq-service", { "label" = "RabbitMQ" }],
@@ -32,6 +33,7 @@ resource "aws_cloudwatch_dashboard" "ecs_central_dashboard" {
         height = 6
         properties = {
           title = "ECS Services - Memory Utilization (%)"
+          region = data.aws_region.current.region
           metrics = [
             ["AWS/ECS", "MemoryUtilization", "ClusterName", var.ecs_cluster_name, "ServiceName", "api-gateway-service", { "label" = "API Gateway" }],
             ["AWS/ECS", "MemoryUtilization", "ClusterName", var.ecs_cluster_name, "ServiceName", "rabbitmq-service", { "label" = "RabbitMQ" }],
@@ -45,3 +47,5 @@ resource "aws_cloudwatch_dashboard" "ecs_central_dashboard" {
     ]
   })
 }
+
+data "aws_region" "current" {}
