@@ -98,18 +98,23 @@ module "secrets" {
   billing_db_name     = var.billing_db_name
 }
 
+module "dashboard" {
+  source           = "./modules/aws/dashboard"
+  ecs_cluster_name = module.ecs.cluster_name
+}
+
 resource "aws_budgets_budget" "monthly_cost_alert" {
-  name = "monthly-budget-alert"
-  budget_type = "COST"
+  name         = "monthly-budget-alert"
+  budget_type  = "COST"
   limit_amount = "50"
-  limit_unit = "USD"
-  time_unit = "MONTHLY"
+  limit_unit   = "USD"
+  time_unit    = "MONTHLY"
 
   notification {
-    comparison_operator = "GREATER_THAN"
-    threshold = "80"
-    threshold_type = "PERCENTAGE"
-    notification_type = "ACTUAL"
+    comparison_operator        = "GREATER_THAN"
+    threshold                  = "80"
+    threshold_type             = "PERCENTAGE"
+    notification_type          = "ACTUAL"
     subscriber_email_addresses = ["mustaphaboutoubdev@gmail.com"]
   }
 }
