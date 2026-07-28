@@ -13,5 +13,6 @@
         "cognito" : "admin",
         "ecs_task": "Custom",
         "security_group": "Core",
+        "dashboard": "review"
     },
 }
