@@ -76,10 +76,16 @@ module "billing_db_volume" {
 
 
 module "cognito" {
-  source       = "./modules/aws/cognito"
-  aws_region   = var.aws_region
-  alb_dns_name = module.alb.alb_dns_name
-  security_group_id = module.aws_gateway_sg.id
+  source             = "./modules/aws/cognito"
+  aws_region         = var.aws_region
+  alb_dns_name       = module.alb.alb_dns_name
+  security_group_id  = module.aws_gateway_sg.id
   private_subnet_ids = [module.vpc.private_subnet_ids[0]]
-  alb_listener_arn = module.alb.alb_listener_arn
+  alb_listener_arn   = module.alb.alb_listener_arn
+}
+
+module "secrets" {
+  source            = "./modules/aws/secrets"
+  rabbitmq_user     = var.rabbitmq_user
+  rabbitmq_password = var.rabbitmq_password
 }

@@ -32,6 +32,8 @@ resource "aws_ecs_task_definition" "task" {
           protocol      = "tcp"
         }
       ]
+     
+      secrets = var.secrets
       environment = var.environment_variables
       logConfiguration = {
         logDriver = "awslogs"

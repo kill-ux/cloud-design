@@ -35,7 +35,7 @@ module "aws_gateway_sg" {
   ]
 }
 
-# # ===== ALB Security Group =====
+# ===== ALB Security Group =====
 module "alb_sg" {
   source = "./modules/aws/security_group"
 
@@ -55,28 +55,6 @@ module "alb_sg" {
 
   tags = { "Component" = "alb" }
 }
-
-
-# # ===== ALB Security Group =====
-# module "alb_sg" {
-#   source = "./modules/aws/security_group"
-
-#   name        = "alb_sg"
-#   description = "Allow inbound internet traffic to ALB"
-#   vpc_id      = module.vpc.vpc_id
-
-#   ingress_rules = [
-#     {
-#       description = "Allow HTTP from internet"
-#       from_port   = 80
-#       protocol    = "tcp"
-#       to_port     = 80
-#       cidr_ipv4   = "0.0.0.0/0"
-#     }
-#   ]
-
-#   tags = { "Component" = "alb" }
-# }
 
 
 # ===== ECS Instance Security Group =====
@@ -266,17 +244,16 @@ module "rabbitmq_service" {
   memory        = 256
   desired_count = 1
 
-  environment_variables = [
+  secrets = [
     {
-      name  = "RABBITMQ_USER"
-      value = var.rabbitmq_user
+      name      = "RABBITMQ_USER"
+      valueFrom = "${module.secrets.rabbitmq_credentials_arn}:username::"
     },
     {
-      name  = "RABBITMQ_PASS"
-      value = var.rabbitmq_password
-    }
+      name      = "RABBITMQ_PASS"
+      valueFrom = "${module.secrets.rabbitmq_credentials_arn}:password::"
+    },
   ]
-
 }
 
 # ==================== Inventory App Security Group ====================
@@ -407,18 +384,18 @@ module "inventory_db_service" {
   desired_count            = 1
   enable_distinct_instance = true
 
-  environment_variables = [
+  secrets = [
     {
-      name  = "DB_USER"
-      value = var.inventory_db_user
+      name      = "DB_USER"
+      valueFrom = "${module.secrets.inventory_db_credentials_arn}:username::"
     },
     {
-      name  = "DB_PASS"
-      value = var.inventory_db_password
+      name      = "DB_PASS"
+      valueFrom = "${module.secrets.inventory_db_credentials_arn}:password::"
     },
     {
-      name  = "DB_NAME"
-      value = var.inventory_db_name
+      name      = "DB_NAME"
+      valueFrom = "${module.secrets.inventory_db_credentials_arn}:db_name::"
     }
   ]
 
@@ -473,6 +450,25 @@ module "billing_service" {
   target_value       = 70
   max_capacity       = 2
 
+  secrets = [
+    {
+      name      = "BILLING_DB_USER"
+      valueFrom = "${module.secrets.billing_db_credentials_arn}:username::"
+    },
+    {
+      name      = "BILLING_DB_PASS"
+      valueFrom = "${module.secrets.billing_db_credentials_arn}:password::"
+    },
+    {
+      name      = "RABBITMQ_USER"
+      valueFrom = "${module.secrets.rabbitmq_credentials_arn}:username::"
+    },
+    {
+      name      = "RABBITMQ_PASS"
+      valueFrom = "${module.secrets.rabbitmq_credentials_arn}:password::"
+    },
+  ]
+
 
   environment_variables = [
     {
@@ -488,18 +484,6 @@ module "billing_service" {
       value = "5432"
     },
     {
-      name  = "BILLING_DB_USER"
-      value = var.billing_db_user
-    },
-    {
-      name  = "BILLING_DB_PASS"
-      value = var.billing_db_password
-    },
-    {
-      name  = "BILLING_DB_NAME"
-      value = var.billing_db_name
-    },
-    {
       name  = "RABBITMQ_HOST"
       value = module.rabbitmq_service.discovery_name
     },
@@ -510,14 +494,6 @@ module "billing_service" {
     {
       name  = "RABBITMQ_QUEUE"
       value = "billing-queue"
-    },
-    {
-      name  = "RABBITMQ_USER"
-      value = var.rabbitmq_user
-    },
-    {
-      name  = "RABBITMQ_PASS"
-      value = var.rabbitmq_password
     }
   ]
 
@@ -572,18 +548,18 @@ module "billing_db_service" {
   enable_ebs_mounts               = true
   placement_constraint_expression = "attribute:role == ${module.billing_db_instance.placement_attribute}"
 
-  environment_variables = [
+  secrets = [
     {
-      name  = "DB_USER"
-      value = var.billing_db_user
+      name      = "DB_USER"
+      valueFrom = "${module.secrets.billing_db_credentials_arn}:username::"
     },
     {
-      name  = "DB_PASS"
-      value = var.billing_db_password
+      name      = "DB_PASS"
+      valueFrom = "${module.secrets.billing_db_credentials_arn}:password::"
     },
     {
-      name  = "DB_NAME"
-      value = var.billing_db_name
+      name      = "DB_NAME"
+      valueFrom = "${module.secrets.billing_db_credentials_arn}:db_name::"
     }
   ]
 }
