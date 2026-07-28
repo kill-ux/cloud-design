@@ -17,3 +17,7 @@ output "alb_target_group_arn_suffix" {
   description = "ARN suffix of the Load Balancer Target Group"
   value       = aws_lb_target_group.cloud_design_gateway_tg.arn_suffix
 }
+
+output "alb_listener_arn" {
+  value = aws_lb_listener.alb_listener.arn
+}

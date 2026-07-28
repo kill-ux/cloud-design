@@ -1,9 +1,9 @@
 resource "aws_lb" "cloud_design_alb" {
   name               = "cloud-design-alb"
-  internal           = false
+  internal           = true
   load_balancer_type = "application"
   security_groups    = [var.alb_sg_id]
-  subnets            = var.public_subnet_ids
+  subnets            = var.private_subnet_ids
 
   tags = { "Name" = "cloud-design-alb" }
 }
@@ -30,7 +30,7 @@ resource "aws_lb_target_group" "cloud_design_gateway_tg" {
 }
 
 
-resource "aws_lb_listener" "name" {
+resource "aws_lb_listener" "alb_listener" {
   load_balancer_arn = aws_lb.cloud_design_alb.arn
   port              = 80
   protocol          = "HTTP"

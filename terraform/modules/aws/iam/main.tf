@@ -59,7 +59,8 @@ resource "aws_iam_role_policy" "ecs_task_service_connect_policy" {
         Action = [
           "servicediscovery:GetService",
           "servicediscovery:ListInstances",
-          "servicediscovery:DiscoverInstances"
+          "servicediscovery:DiscoverInstances",
+          "secretsmanager:GetSecretValue"
         ]
         Resource = "*"
       }

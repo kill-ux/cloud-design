@@ -3,8 +3,13 @@ variable "alb_sg_id" {
   type        = string
 }
 
-variable "public_subnet_ids" {
-  description = "List of public subnet IDs for the Application Load Balancer"
+# variable "public_subnet_ids" {
+#   description = "List of public subnet IDs for the Application Load Balancer"
+#   type        = list(string)
+# }
+
+variable "private_subnet_ids" {
+  description = "List of private subnet IDs for the Application Load Balancer"
   type        = list(string)
 }
 

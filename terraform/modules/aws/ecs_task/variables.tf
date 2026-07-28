@@ -86,6 +86,15 @@ variable "environment_variables" {
   default = []
 }
 
+variable "secrets" {
+  type = list(object({
+    name      = string
+    valueFrom = string
+  }))
+  default     = []
+  description = "Secrets from Secrets Manager or SSM Parameter Store"
+}
+
 variable "log_retention_days" {
   description = "CloudWatch log retention in days"
   type        = number

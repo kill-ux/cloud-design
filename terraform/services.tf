@@ -18,22 +18,38 @@ module "vpc_endpoints_sg" {
   tags = { "Name" : "vpc_endpoints_sg" }
 }
 
+module "aws_gateway_sg" {
+  source      = "./modules/aws/security_group"
+  name        = "aws_gateway_sg"
+  description = "Security group for API Gateway VPC Link"
+  vpc_id      = module.vpc.vpc_id
+
+  egress_rules = [
+    {
+      description = "Allow HTTP outbound to VPC"
+      from_port   = 80
+      to_port     = 80
+      protocol    = "tcp"
+      cidr_ipv4   = var.vpc_cidr
+    }
+  ]
+}
 
 # ===== ALB Security Group =====
 module "alb_sg" {
   source = "./modules/aws/security_group"
 
   name        = "alb_sg"
-  description = "Allow inbound internet traffic to ALB"
+  description = "Allow inbound Aws API Gateway  traffic to ALB"
   vpc_id      = module.vpc.vpc_id
 
   ingress_rules = [
     {
-      description = "Allow HTTP from internet"
-      from_port   = 80
-      protocol    = "tcp"
-      to_port     = 80
-      cidr_ipv4   = "0.0.0.0/0"
+      description                  = "Allow HTTP from Aws API Gateway "
+      from_port                    = 80
+      protocol                     = "tcp"
+      to_port                      = 80
+      referenced_security_group_id = module.aws_gateway_sg.id
     }
   ]
 
@@ -112,11 +128,11 @@ module "api_gateway_service" {
   capacity_provider_name          = module.ecs.capacity_provider_name
   execution_role_arn              = module.iam.ecs_execution_role_arn
   service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
-  subnets         = module.vpc.private_subnet_ids
-  security_groups = [module.gateway_sg.id]
-  cpu             = 128
-  memory          = 256
-  desired_count   = 1
+  subnets                         = module.vpc.private_subnet_ids
+  security_groups                 = [module.gateway_sg.id]
+  cpu                             = 128
+  memory                          = 256
+  desired_count                   = 1
 
   enable_autoscaling = true
   scaling_metric     = "requests"
@@ -159,15 +175,19 @@ module "api_gateway_service" {
     {
       name  = "APIGATEWAY_PORT"
       value = "3000"
-    },
-    {
-      name  = "RABBITMQ_USER"
-      value = var.rabbitmq_user
-    },
-    {
-      name  = "RABBITMQ_PASS"
-      value = var.rabbitmq_password
     }
+  ]
+
+
+  secrets = [
+    {
+      name      = "RABBITMQ_USER"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:rabbitmq_user::"
+    },
+    {
+      name      = "RABBITMQ_PASS"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:rabbitmq_password::"
+    },
   ]
 
   depends_on = [module.alb, module.billing_service, module.inventory_service]
@@ -221,24 +241,23 @@ module "rabbitmq_service" {
   capacity_provider_name          = module.ecs.capacity_provider_name
   execution_role_arn              = module.iam.ecs_execution_role_arn
   service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
-  subnets         = module.vpc.private_subnet_ids
-  security_groups = [module.rabbitmq_sg.id]
+  subnets                         = module.vpc.private_subnet_ids
+  security_groups                 = [module.rabbitmq_sg.id]
 
   cpu           = 128
   memory        = 256
   desired_count = 1
 
-  environment_variables = [
+  secrets = [
     {
-      name  = "RABBITMQ_USER"
-      value = var.rabbitmq_user
+      name      = "RABBITMQ_USER"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:rabbitmq_user::"
     },
     {
-      name  = "RABBITMQ_PASS"
-      value = var.rabbitmq_password
-    }
+      name      = "RABBITMQ_PASS"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:rabbitmq_password::"
+    },
   ]
-
 }
 
 # ==================== Inventory App Security Group ====================
@@ -277,8 +296,8 @@ module "inventory_service" {
   capacity_provider_name          = module.ecs.capacity_provider_name
   execution_role_arn              = module.iam.ecs_execution_role_arn
   service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
-  subnets         = module.vpc.private_subnet_ids
-  security_groups = [module.inventory_sg.id]
+  subnets                         = module.vpc.private_subnet_ids
+  security_groups                 = [module.inventory_sg.id]
 
   cpu           = 128
   memory        = 256
@@ -288,6 +307,21 @@ module "inventory_service" {
   scaling_metric     = "cpu"
   target_value       = 70
   max_capacity       = 2
+
+  secrets = [
+    {
+      name      = "INVENTORY_DB_USER"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:inventory_db_user::"
+    },
+    {
+      name      = "INVENTORY_DB_PASS"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:inventory_db_password::"
+    },
+    {
+      name      = "INVENTORY_DB_NAME"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:inventory_db_name::"
+    },
+  ]
 
   environment_variables = [
     {
@@ -302,18 +336,6 @@ module "inventory_service" {
       name  = "INVENTORY_DB_PORT"
       value = "5432"
     },
-    {
-      name  = "INVENTORY_DB_USER"
-      value = var.inventory_db_user
-    },
-    {
-      name  = "INVENTORY_DB_PASS"
-      value = var.inventory_db_password
-    },
-    {
-      name  = "INVENTORY_DB_NAME"
-      value = var.inventory_db_name
-    }
   ]
 
   depends_on = [module.inventory_db_service]
@@ -355,11 +377,9 @@ module "inventory_db_service" {
   capacity_provider_name          = module.ecs.capacity_provider_name
   execution_role_arn              = module.iam.ecs_execution_role_arn
   service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
-  # ecs_instance_profile_name       = module.iam.ecs_instance_profile_name
-  # ecs_instance_sg_id              = module.ecs_instance_sg.id
 
-  enable_ebs_mounts = true
-  placement_constraint_expression =  "attribute:role == ${module.inventory_db_instance.placement_attribute}"
+  enable_ebs_mounts               = true
+  placement_constraint_expression = "attribute:role == ${module.inventory_db_instance.placement_attribute}"
 
   subnets         = module.vpc.private_subnet_ids
   security_groups = [module.inventory_db_sg.id]
@@ -369,18 +389,18 @@ module "inventory_db_service" {
   desired_count            = 1
   enable_distinct_instance = true
 
-  environment_variables = [
+  secrets = [
     {
-      name  = "DB_USER"
-      value = var.inventory_db_user
+      name      = "DB_USER"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:inventory_db_user::"
     },
     {
-      name  = "DB_PASS"
-      value = var.inventory_db_password
+      name      = "DB_PASS"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:inventory_db_password::"
     },
     {
-      name  = "DB_NAME"
-      value = var.inventory_db_name
+      name      = "DB_NAME"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:inventory_db_name::"
     }
   ]
 
@@ -435,6 +455,30 @@ module "billing_service" {
   target_value       = 70
   max_capacity       = 2
 
+  secrets = [
+    {
+      name      = "BILLING_DB_USER"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:billing_db_user::"
+    },
+    {
+      name      = "BILLING_DB_PASS"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:billing_db_password::"
+    },
+    {
+      name      = "BILLING_DB_NAME"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:billing_db_name::"
+    },
+    {
+      name      = "RABBITMQ_USER"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:rabbitmq_user::"
+    },
+    {
+      name      = "RABBITMQ_PASS"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:rabbitmq_password::"
+    },
+
+  ]
+
 
   environment_variables = [
     {
@@ -450,18 +494,6 @@ module "billing_service" {
       value = "5432"
     },
     {
-      name  = "BILLING_DB_USER"
-      value = var.billing_db_user
-    },
-    {
-      name  = "BILLING_DB_PASS"
-      value = var.billing_db_password
-    },
-    {
-      name  = "BILLING_DB_NAME"
-      value = var.billing_db_name
-    },
-    {
       name  = "RABBITMQ_HOST"
       value = module.rabbitmq_service.discovery_name
     },
@@ -472,14 +504,6 @@ module "billing_service" {
     {
       name  = "RABBITMQ_QUEUE"
       value = "billing-queue"
-    },
-    {
-      name  = "RABBITMQ_USER"
-      value = var.rabbitmq_user
-    },
-    {
-      name  = "RABBITMQ_PASS"
-      value = var.rabbitmq_password
     }
   ]
 
@@ -531,21 +555,21 @@ module "billing_db_service" {
   desired_count            = 1
   enable_distinct_instance = true
 
-  enable_ebs_mounts = true
+  enable_ebs_mounts               = true
   placement_constraint_expression = "attribute:role == ${module.billing_db_instance.placement_attribute}"
 
-  environment_variables = [
+  secrets = [
     {
-      name  = "DB_USER"
-      value = var.billing_db_user
+      name      = "DB_USER"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:billing_db_user::"
     },
     {
-      name  = "DB_PASS"
-      value = var.billing_db_password
+      name      = "DB_PASS"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:billing_db_password::"
     },
     {
-      name  = "DB_NAME"
-      value = var.billing_db_name
+      name      = "DB_NAME"
+      valueFrom = "${module.secrets.cloud_design_credentials_arn}:billing_db_name::"
     }
   ]
 }

@@ -3,6 +3,7 @@ resource "aws_ebs_volume" "ebs" {
   size              = var.ebs_size
   type              = var.ebs_type
   tags              = var.tags
+  encrypted = true
 }
 
 resource "aws_volume_attachment" "ebs_attachment" {
