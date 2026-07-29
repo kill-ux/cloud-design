@@ -19,8 +19,3 @@ variable "vpc_cidr" {
   description = "CIDR block for the VPC (must match the foundation stack)"
   type        = string
 }
-
-variable "ecr_registry" {
-  description = "ECR registry URL (account ID + region, e.g. 123456789012.dkr.ecr.eu-west-3.amazonaws.com)"
-  type        = string
-}
