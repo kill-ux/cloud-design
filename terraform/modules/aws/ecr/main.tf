@@ -17,7 +17,9 @@ resource "aws_ecr_repository" "app_repos" {
 
   tags = { "Name" = "cloud-design-${each.value}-ecr" }
 
-  lifecycle {
-    prevent_destroy = true
-  }
+  force_delete = true
+
+  # lifecycle {
+  #   prevent_destroy = true
+  # }
 }
