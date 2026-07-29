@@ -33,3 +33,38 @@ output "secrets_arn" {
 output "ecr_registry" {
   value = module.ecr.ecr_registry
 }
+
+output "aws_gateway_sg_id" {
+  value = module.aws_gateway_sg.id
+}
+
+output "alb_sg_id" {
+  value = module.alb_sg.id
+}
+
+output "ecs_instance_sg_id" {
+  value = module.ecs_instance_sg.id
+}
+
+output "gateway_sg_id" {
+  value = module.gateway_sg.id
+}
+
+output "rabbitmq_sg_id" {
+  value = module.rabbitmq_sg.id
+}
+
+output "inventory_sg_id" {
+  value = module.inventory_sg.id
+}
+output "inventory_db_sg_id" {
+  value = module.inventory_db_sg.id
+}
+
+output "billing_sg_id" {
+  value = module.billing_sg.id
+}
+
+output "billing_db_sg_id" {
+  value = module.billing_db_sg.id
+}

@@ -18,11 +18,17 @@ locals {
   private_subnet_azs              = data.terraform_remote_state.foundation.outputs.private_subnet_azs
   secrets_arn                     = data.terraform_remote_state.foundation.outputs.secrets_arn
   ecr_registry                    = data.terraform_remote_state.foundation.outputs.ecr_registry
+
+  aws_gateway_sg_id  = data.terraform_remote_state.foundation.outputs.aws_gateway_sg_id
+  alb_sg_id          = data.terraform_remote_state.foundation.outputs.alb_sg_id
+  ecs_instance_sg_id = data.terraform_remote_state.foundation.outputs.ecs_instance_sg_id
+  gateway_sg_id      = data.terraform_remote_state.foundation.outputs.gateway_sg_id
+  rabbitmq_sg_id     = data.terraform_remote_state.foundation.outputs.rabbitmq_sg_id
 }
 
 module "alb" {
   source             = "../modules/aws/alb"
-  alb_sg_id          = module.alb_sg.id
+  alb_sg_id          = local.alb_sg_id
   private_subnet_ids = local.private_subnet_ids
   vpc_id             = local.vpc_id
 }
@@ -31,7 +37,7 @@ module "ecs" {
   source                          = "../modules/aws/ecs"
   ecs_execution_role_arn          = local.ecs_execution_role_arn
   ecs_instance_profile_name       = local.ecs_instance_profile_name
-  ecs_instance_sg_id              = module.ecs_instance_sg.id
+  ecs_instance_sg_id              = local.ecs_instance_sg_id
   private_subnet_ids              = local.private_subnet_ids
   public_subnet_ids               = local.public_subnet_ids
   desired_capacity                = 4
@@ -44,7 +50,7 @@ module "inventory_db_instance" {
   source                    = "../modules/aws/ecs_db_instance"
   host_name                 = "inventory-db"
   iam_instance_profile_name = local.ecs_instance_profile_name
-  security_group_id         = module.ecs_instance_sg.id
+  security_group_id         = local.ecs_instance_sg_id
   subnet_id                 = local.private_subnet_ids[0]
   cluster_name              = module.ecs.cluster_name
   device_name               = "sdh"
@@ -64,7 +70,7 @@ module "billing_db_instance" {
   source                    = "../modules/aws/ecs_db_instance"
   host_name                 = "billing-db"
   iam_instance_profile_name = local.ecs_instance_profile_name
-  security_group_id         = module.ecs_instance_sg.id
+  security_group_id         = local.ecs_instance_sg_id
   subnet_id                 = local.private_subnet_ids[0]
   cluster_name              = module.ecs.cluster_name
   device_name               = "sdi"
@@ -84,7 +90,7 @@ module "cognito" {
   source             = "../modules/aws/cognito"
   aws_region         = var.aws_region
   alb_dns_name       = module.alb.alb_dns_name
-  security_group_id  = module.aws_gateway_sg.id
+  security_group_id  = local.aws_gateway_sg_id
   private_subnet_ids = [local.private_subnet_ids[0]]
   alb_listener_arn   = module.alb.alb_listener_arn
 }
