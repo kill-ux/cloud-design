@@ -20,12 +20,6 @@ variable "vpc_cidr" {
   type        = string
 }
 
-variable "ecr_registry" {
-  description = "ECR registry URL"
-  type        = string
-}
-
-
 variable "rabbitmq_user" {
   description = "RabbitMQ username"
   type        = string
@@ -71,5 +65,3 @@ variable "billing_db_name" {
   description = "billing DB name"
   type        = string
 }
-
-

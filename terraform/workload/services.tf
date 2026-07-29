@@ -1,28 +1,8 @@
-module "vpc_endpoints_sg" {
-  source = "./modules/aws/security_group"
-
-  name        = "vpc_endpoints_sg"
-  description = "Allow HTTPS from private subnets to VPC endpoints"
-  vpc_id      = module.vpc.vpc_id
-
-  ingress_rules = [
-    {
-      description = "Allow HTTPS from VPC"
-      protocol    = "tcp"
-      from_port   = 443
-      to_port     = 443
-      cidr_ipv4   = var.vpc_cidr
-    }
-  ]
-
-  tags = { "Name" : "vpc_endpoints_sg" }
-}
-
 module "aws_gateway_sg" {
-  source      = "./modules/aws/security_group"
+  source      = "../modules/aws/security_group"
   name        = "aws_gateway_sg"
   description = "Security group for API Gateway VPC Link"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = local.vpc_id
 
   egress_rules = [
     {
@@ -37,11 +17,11 @@ module "aws_gateway_sg" {
 
 # ===== ALB Security Group =====
 module "alb_sg" {
-  source = "./modules/aws/security_group"
+  source = "../modules/aws/security_group"
 
   name        = "alb_sg"
   description = "Allow inbound Aws API Gateway  traffic to ALB"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = local.vpc_id
 
   ingress_rules = [
     {
@@ -56,14 +36,13 @@ module "alb_sg" {
   tags = { "Component" = "alb" }
 }
 
-
 # ===== ECS Instance Security Group =====
 module "ecs_instance_sg" {
-  source = "./modules/aws/security_group"
+  source = "../modules/aws/security_group"
 
   name        = "ecs_instance_sg"
   description = "Security group for ECS EC2 instances"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = local.vpc_id
 
   ingress_rules = [
     {
@@ -92,13 +71,14 @@ module "ecs_instance_sg" {
   tags = { "Component" = "compute" }
 }
 
+
 # ==================== API Gateway Security Group ====================
 module "gateway_sg" {
-  source = "./modules/aws/security_group"
+  source = "../modules/aws/security_group"
 
   name        = "gateway_sg"
   description = "Allow traffic from ALB to API gateway app"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = local.vpc_id
 
   ingress_rules = [
     {
@@ -113,12 +93,14 @@ module "gateway_sg" {
   tags = { "Component" = "api-gateway" }
 }
 
+
+
 # API Gateway
 module "api_gateway_service" {
-  source = "./modules/aws/ecs_task"
+  source = "../modules/aws/ecs_task"
 
   task_name       = "api-gateway"
-  container_image = "${var.ecr_registry}/api-gateway-app:1.0.0"
+  container_image = "${local.ecr_registry["api-gateway-app"]}:1.0.0"
   container_port  = 3000
   port_name       = "api-gateway"
   dns_name        = "api-gateway"
@@ -126,9 +108,9 @@ module "api_gateway_service" {
   cluster_id                      = module.ecs.cluster_id
   cluster_name                    = module.ecs.cluster_name
   capacity_provider_name          = module.ecs.capacity_provider_name
-  execution_role_arn              = module.iam.ecs_execution_role_arn
-  service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
-  subnets                         = module.vpc.private_subnet_ids
+  execution_role_arn              = local.ecs_execution_role_arn
+  service_discovery_namespace_arn = local.service_discovery_namespace_arn
+  subnets                         = local.private_subnet_ids
   security_groups                 = [module.gateway_sg.id]
   cpu                             = 128
   memory                          = 256
@@ -182,11 +164,11 @@ module "api_gateway_service" {
   secrets = [
     {
       name      = "RABBITMQ_USER"
-      valueFrom = "${module.secrets.cloud_design_credentials_arn}:rabbitmq_user::"
+      valueFrom = "${local.secrets_arn}:rabbitmq_user::"
     },
     {
       name      = "RABBITMQ_PASS"
-      valueFrom = "${module.secrets.cloud_design_credentials_arn}:rabbitmq_password::"
+      valueFrom = "${local.secrets_arn}:rabbitmq_password::"
     },
   ]
 
@@ -197,11 +179,11 @@ module "api_gateway_service" {
 
 # ==================== RabbitMQ Security Group ====================
 module "rabbitmq_sg" {
-  source = "./modules/aws/security_group"
+  source = "../modules/aws/security_group"
 
   name        = "rabbitmq_sg"
   description = "Allow traffic from applications to RabbitMQ"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = local.vpc_id
 
   ingress_rules = [
     {
@@ -226,10 +208,10 @@ module "rabbitmq_sg" {
 
 # RabbitMQ
 module "rabbitmq_service" {
-  source = "./modules/aws/ecs_task"
+  source = "../modules/aws/ecs_task"
 
   task_name       = "rabbitmq"
-  container_image = "${var.ecr_registry}/rabbitmq:1.0.0"
+  container_image = "${local.ecr_registry["rabbitmq"]}:1.0.0"
   container_port  = 5672
   port_name       = "amqp"
   discovery_name  = "rabbitmq"
@@ -239,9 +221,9 @@ module "rabbitmq_service" {
   cluster_id                      = module.ecs.cluster_id
   cluster_name                    = module.ecs.cluster_name
   capacity_provider_name          = module.ecs.capacity_provider_name
-  execution_role_arn              = module.iam.ecs_execution_role_arn
-  service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
-  subnets                         = module.vpc.private_subnet_ids
+  execution_role_arn              = local.ecs_execution_role_arn
+  service_discovery_namespace_arn = local.service_discovery_namespace_arn
+  subnets                         = local.private_subnet_ids
   security_groups                 = [module.rabbitmq_sg.id]
 
   cpu           = 128
@@ -251,22 +233,23 @@ module "rabbitmq_service" {
   secrets = [
     {
       name      = "RABBITMQ_USER"
-      valueFrom = "${module.secrets.cloud_design_credentials_arn}:rabbitmq_user::"
+      valueFrom = "${local.secrets_arn}:rabbitmq_user::"
     },
     {
       name      = "RABBITMQ_PASS"
-      valueFrom = "${module.secrets.cloud_design_credentials_arn}:rabbitmq_password::"
+      valueFrom = "${local.secrets_arn}:rabbitmq_password::"
     },
   ]
 }
 
+
 # ==================== Inventory App Security Group ====================
 module "inventory_sg" {
-  source = "./modules/aws/security_group"
+  source = "../modules/aws/security_group"
 
   name        = "inventory_sg"
   description = "Allow traffic from API gateway to inventory app"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = local.vpc_id
 
   ingress_rules = [
     {
@@ -282,10 +265,10 @@ module "inventory_sg" {
 }
 
 module "inventory_service" {
-  source = "./modules/aws/ecs_task"
+  source = "../modules/aws/ecs_task"
 
   task_name       = "inventory"
-  container_image = "${var.ecr_registry}/inventory-app:1.0.0"
+  container_image = "${local.ecr_registry["inventory-app"]}:1.0.0"
   container_port  = 8080
   port_name       = "inventory"
   discovery_name  = "inventory"
@@ -294,9 +277,9 @@ module "inventory_service" {
   cluster_id                      = module.ecs.cluster_id
   cluster_name                    = module.ecs.cluster_name
   capacity_provider_name          = module.ecs.capacity_provider_name
-  execution_role_arn              = module.iam.ecs_execution_role_arn
-  service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
-  subnets                         = module.vpc.private_subnet_ids
+  execution_role_arn              = local.ecs_execution_role_arn
+  service_discovery_namespace_arn = local.service_discovery_namespace_arn
+  subnets                         = local.private_subnet_ids
   security_groups                 = [module.inventory_sg.id]
 
   cpu           = 128
@@ -311,15 +294,15 @@ module "inventory_service" {
   secrets = [
     {
       name      = "INVENTORY_DB_USER"
-      valueFrom = "${module.secrets.cloud_design_credentials_arn}:inventory_db_user::"
+      valueFrom = "${local.secrets_arn}:inventory_db_user::"
     },
     {
       name      = "INVENTORY_DB_PASS"
-      valueFrom = "${module.secrets.cloud_design_credentials_arn}:inventory_db_password::"
+      valueFrom = "${local.secrets_arn}:inventory_db_password::"
     },
     {
       name      = "INVENTORY_DB_NAME"
-      valueFrom = "${module.secrets.cloud_design_credentials_arn}:inventory_db_name::"
+      valueFrom = "${local.secrets_arn}:inventory_db_name::"
     },
   ]
 
@@ -341,13 +324,14 @@ module "inventory_service" {
   depends_on = [module.inventory_db_service]
 }
 
+
 # ==================== Inventory DB Security Group ====================
 module "inventory_db_sg" {
-  source = "./modules/aws/security_group"
+  source = "../modules/aws/security_group"
 
   name        = "inventory_db_sg"
   description = "Allow traffic from inventory app to database"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = local.vpc_id
 
   ingress_rules = [
     {
@@ -362,11 +346,12 @@ module "inventory_db_sg" {
   tags = { "Component" = "database" }
 }
 
+
 module "inventory_db_service" {
-  source = "./modules/aws/ecs_task"
+  source = "../modules/aws/ecs_task"
 
   task_name       = "inventory-db"
-  container_image = "${var.ecr_registry}/postgres-db:1.0.0"
+  container_image = "${local.ecr_registry["postgres-db"]}:1.0.0"
   container_port  = 5432
   port_name       = "inventory-db"
   discovery_name  = "inventory-db"
@@ -375,13 +360,13 @@ module "inventory_db_service" {
   cluster_id                      = module.ecs.cluster_id
   cluster_name                    = module.ecs.cluster_name
   capacity_provider_name          = module.ecs.capacity_provider_name
-  execution_role_arn              = module.iam.ecs_execution_role_arn
-  service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
+  execution_role_arn              = local.ecs_execution_role_arn
+  service_discovery_namespace_arn = local.service_discovery_namespace_arn
 
   enable_ebs_mounts               = true
   placement_constraint_expression = "attribute:role == ${module.inventory_db_instance.placement_attribute}"
 
-  subnets         = module.vpc.private_subnet_ids
+  subnets         = local.private_subnet_ids
   security_groups = [module.inventory_db_sg.id]
 
   cpu                      = 128
@@ -392,27 +377,28 @@ module "inventory_db_service" {
   secrets = [
     {
       name      = "DB_USER"
-      valueFrom = "${module.secrets.cloud_design_credentials_arn}:inventory_db_user::"
+      valueFrom = "${local.secrets_arn}:inventory_db_user::"
     },
     {
       name      = "DB_PASS"
-      valueFrom = "${module.secrets.cloud_design_credentials_arn}:inventory_db_password::"
+      valueFrom = "${local.secrets_arn}:inventory_db_password::"
     },
     {
       name      = "DB_NAME"
-      valueFrom = "${module.secrets.cloud_design_credentials_arn}:inventory_db_name::"
+      valueFrom = "${local.secrets_arn}:inventory_db_name::"
     }
   ]
 
 }
 
+
 # ==================== Billing App Security Group ====================
 module "billing_sg" {
-  source = "./modules/aws/security_group"
+  source = "../modules/aws/security_group"
 
   name        = "billing_sg"
   description = "Allow traffic from API gateway to billing app"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = local.vpc_id
 
   ingress_rules = [
     {
@@ -428,10 +414,10 @@ module "billing_sg" {
 }
 
 module "billing_service" {
-  source = "./modules/aws/ecs_task"
+  source = "../modules/aws/ecs_task"
 
   task_name       = "billing"
-  container_image = "${var.ecr_registry}/billing-app:1.0.0"
+  container_image = "${local.ecr_registry["billing-app"]}:1.0.0"
   container_port  = 8080
   port_name       = "billing"
   discovery_name  = "billing"
@@ -440,10 +426,10 @@ module "billing_service" {
   cluster_id                      = module.ecs.cluster_id
   cluster_name                    = module.ecs.cluster_name
   capacity_provider_name          = module.ecs.capacity_provider_name
-  execution_role_arn              = module.iam.ecs_execution_role_arn
-  service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
+  execution_role_arn              = local.ecs_execution_role_arn
+  service_discovery_namespace_arn = local.service_discovery_namespace_arn
 
-  subnets         = module.vpc.private_subnet_ids
+  subnets         = local.private_subnet_ids
   security_groups = [module.billing_sg.id]
 
   cpu           = 128
@@ -458,23 +444,23 @@ module "billing_service" {
   secrets = [
     {
       name      = "BILLING_DB_USER"
-      valueFrom = "${module.secrets.cloud_design_credentials_arn}:billing_db_user::"
+      valueFrom = "${local.secrets_arn}:billing_db_user::"
     },
     {
       name      = "BILLING_DB_PASS"
-      valueFrom = "${module.secrets.cloud_design_credentials_arn}:billing_db_password::"
+      valueFrom = "${local.secrets_arn}:billing_db_password::"
     },
     {
       name      = "BILLING_DB_NAME"
-      valueFrom = "${module.secrets.cloud_design_credentials_arn}:billing_db_name::"
+      valueFrom = "${local.secrets_arn}:billing_db_name::"
     },
     {
       name      = "RABBITMQ_USER"
-      valueFrom = "${module.secrets.cloud_design_credentials_arn}:rabbitmq_user::"
+      valueFrom = "${local.secrets_arn}:rabbitmq_user::"
     },
     {
       name      = "RABBITMQ_PASS"
-      valueFrom = "${module.secrets.cloud_design_credentials_arn}:rabbitmq_password::"
+      valueFrom = "${local.secrets_arn}:rabbitmq_password::"
     },
 
   ]
@@ -510,13 +496,14 @@ module "billing_service" {
   depends_on = [module.billing_db_service, module.rabbitmq_service]
 }
 
+
 # ==================== Billing DB Security Group ====================
 module "billing_db_sg" {
-  source = "./modules/aws/security_group"
+  source = "../modules/aws/security_group"
 
   name        = "billing_db_sg"
   description = "Allow traffic from billing app to database"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = local.vpc_id
 
   ingress_rules = [
     {
@@ -532,10 +519,10 @@ module "billing_db_sg" {
 }
 
 module "billing_db_service" {
-  source = "./modules/aws/ecs_task"
+  source = "../modules/aws/ecs_task"
 
   task_name       = "billing-db"
-  container_image = "${var.ecr_registry}/postgres-db:1.0.0"
+  container_image = "${local.ecr_registry["postgres-db"]}:1.0.0"
   container_port  = 5432
   port_name       = "billing-db"
   discovery_name  = "billing-db"
@@ -544,10 +531,10 @@ module "billing_db_service" {
   cluster_id                      = module.ecs.cluster_id
   cluster_name                    = module.ecs.cluster_name
   capacity_provider_name          = module.ecs.capacity_provider_name
-  execution_role_arn              = module.iam.ecs_execution_role_arn
-  service_discovery_namespace_arn = module.vpc.service_discovery_namespace_arn
+  execution_role_arn              = local.ecs_execution_role_arn
+  service_discovery_namespace_arn = local.service_discovery_namespace_arn
 
-  subnets         = module.vpc.private_subnet_ids
+  subnets         = local.private_subnet_ids
   security_groups = [module.billing_db_sg.id]
 
   cpu                      = 128
@@ -561,15 +548,15 @@ module "billing_db_service" {
   secrets = [
     {
       name      = "DB_USER"
-      valueFrom = "${module.secrets.cloud_design_credentials_arn}:billing_db_user::"
+      valueFrom = "${local.secrets_arn}:billing_db_user::"
     },
     {
       name      = "DB_PASS"
-      valueFrom = "${module.secrets.cloud_design_credentials_arn}:billing_db_password::"
+      valueFrom = "${local.secrets_arn}:billing_db_password::"
     },
     {
       name      = "DB_NAME"
-      valueFrom = "${module.secrets.cloud_design_credentials_arn}:billing_db_name::"
+      valueFrom = "${local.secrets_arn}:billing_db_name::"
     }
   ]
 }

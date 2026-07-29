@@ -9,7 +9,7 @@ terraform {
 
   backend "s3" {
     bucket = "cloud-design-tfstate-969209892845-eu-west-3-an"
-    key    = "terraform.tfstate"
+    key    = "workload/terraform.tfstate"
     region = "eu-west-3"
   }
 }
@@ -22,6 +22,7 @@ provider "aws" {
   default_tags {
     tags = {
       Project = "cloud-design"
+      Stack   = "workload"
     }
   }
 }
