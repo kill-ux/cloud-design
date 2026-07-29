@@ -39,11 +39,11 @@ locals {
   ])
 }
 
-import {
-  for_each = local.ecr_repo_names
-  to       = module.ecr.aws_ecr_repository.app_repos[each.value]
-  id       = each.value
-}
+# import {
+#   for_each = local.ecr_repo_names
+#   to       = module.ecr.aws_ecr_repository.app_repos[each.value]
+#   id       = each.value
+# }
 
 module "ecr" {
   source = "../modules/aws/ecr"
