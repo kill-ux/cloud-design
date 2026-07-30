@@ -15,5 +15,5 @@ output "cognito_user_pool_client_id" {
 
 output "api_gateway_url" {
   description = "The API Gateway endpoint URL"
-  value = module.cognito.api_gateway_url
+  value       = module.cognito.api_gateway_url
 }

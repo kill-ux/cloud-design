@@ -1,15 +1,3 @@
-variable "aws_access_key_id" {
-  description = "AWS Access Key ID"
-  type        = string
-  sensitive   = true
-}
-
-variable "aws_secret_access_key" {
-  description = "AWS Secret Access Key"
-  type        = string
-  sensitive   = true
-}
-
 variable "aws_region" {
   description = "AWS region"
   type        = string
@@ -19,12 +7,6 @@ variable "vpc_cidr" {
   description = "CIDR block for the VPC"
   type        = string
 }
-
-variable "ecr_registry" {
-  description = "ECR registry URL"
-  type        = string
-}
-
 
 variable "rabbitmq_user" {
   description = "RabbitMQ username"
@@ -71,5 +53,3 @@ variable "billing_db_name" {
   description = "billing DB name"
   type        = string
 }
-
-
