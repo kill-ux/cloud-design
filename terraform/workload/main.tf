@@ -24,6 +24,10 @@ locals {
   ecs_instance_sg_id = data.terraform_remote_state.foundation.outputs.ecs_instance_sg_id
   gateway_sg_id      = data.terraform_remote_state.foundation.outputs.gateway_sg_id
   rabbitmq_sg_id     = data.terraform_remote_state.foundation.outputs.rabbitmq_sg_id
+  inventory_sg_id     = data.terraform_remote_state.foundation.outputs.inventory_sg_id
+  inventory_db_sg_id     = data.terraform_remote_state.foundation.outputs.inventory_db_sg_id
+  billing_sg_id     = data.terraform_remote_state.foundation.outputs.billing_sg_id
+  billing_db_sg_id     = data.terraform_remote_state.foundation.outputs.billing_db_sg_id
 }
 
 module "alb" {

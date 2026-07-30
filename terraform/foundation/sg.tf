@@ -58,7 +58,7 @@ module "ecs_instance_sg" {
       from_port                    = 80
       to_port                      = 80
       protocol                     = "tcp"
-      referenced_security_group_id = module.vpc.vpc_id
+      referenced_security_group_id = module.alb_sg.id
     },
     # {
     #   description = "TEMP: Allow SSH for debugging"
@@ -86,7 +86,7 @@ module "gateway_sg" {
       from_port                    = 3000
       to_port                      = 3000
       protocol                     = "tcp"
-      referenced_security_group_id = module.vpc.vpc_id
+      referenced_security_group_id = module.alb_sg.id
     }
   ]
 
