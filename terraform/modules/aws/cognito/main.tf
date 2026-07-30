@@ -78,3 +78,19 @@ resource "aws_apigatewayv2_vpc_link" "alb_link" {
   security_group_ids = [var.security_group_id]
   subnet_ids         = var.private_subnet_ids
 }
+
+
+resource "aws_apigatewayv2_domain_name" "custom_domain" {
+  domain_name = var.domain_name
+  domain_name_configuration {
+    certificate_arn = var.cert_arn
+    endpoint_type = "REGIONAL"
+    security_policy = "TLS_1_2"
+  }
+}
+
+resource "aws_apigatewayv2_api_mapping" "mapping" {
+  api_id = aws_apigatewayv2_api.gateway.id
+  domain_name = aws_apigatewayv2_domain_name.custom_domain.id
+  stage = aws_apigatewayv2_stage.default.id
+}

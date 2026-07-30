@@ -18,3 +18,11 @@ variable "private_subnet_ids" {
 variable "alb_listener_arn" {
   type = string
 }
+
+variable "domain_name" {
+  type = string
+}
+
+variable "cert_arn" {
+  type = string
+}

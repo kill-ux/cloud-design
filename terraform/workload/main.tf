@@ -28,6 +28,8 @@ locals {
   inventory_db_sg_id     = data.terraform_remote_state.foundation.outputs.inventory_db_sg_id
   billing_sg_id     = data.terraform_remote_state.foundation.outputs.billing_sg_id
   billing_db_sg_id     = data.terraform_remote_state.foundation.outputs.billing_db_sg_id
+
+  cert_arn = data.terraform_remote_state.foundation.outputs.cert_arn
 }
 
 module "alb" {
@@ -97,6 +99,8 @@ module "cognito" {
   security_group_id  = local.aws_gateway_sg_id
   private_subnet_ids = [local.private_subnet_ids[0]]
   alb_listener_arn   = module.alb.alb_listener_arn
+  domain_name = "cloud.hansel.lol"
+  cert_arn = local.cert_arn
 }
 
 module "dashboard" {
@@ -119,3 +123,5 @@ resource "aws_budgets_budget" "monthly_cost_alert" {
     subscriber_email_addresses = ["mustaphaboutoubdev@gmail.com"]
   }
 }
+
+

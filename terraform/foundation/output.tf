@@ -68,3 +68,11 @@ output "billing_sg_id" {
 output "billing_db_sg_id" {
   value = module.billing_db_sg.id
 }
+
+output "cert_validation_record" {
+  value = module.acm.cert_validation_record
+}
+
+output "cert_arn" {
+  value = module.acm.cert_arn
+}
