@@ -1,3 +1,4 @@
+
 resource "aws_ecr_repository" "app_repos" {
   for_each = toset([
     "inventory-app",
@@ -14,9 +15,11 @@ resource "aws_ecr_repository" "app_repos" {
     scan_on_push = true
   }
 
-  lifecycle {
-    prevent_destroy = true
-  }
-
   tags = { "Name" = "cloud-design-${each.value}-ecr" }
+
+  force_delete = true
+
+  # lifecycle {
+  #   prevent_destroy = true
+  # }
 }
