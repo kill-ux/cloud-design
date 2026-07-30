@@ -184,3 +184,113 @@ Run `make help` for the full list.
 - The ALB listener currently serves HTTP internally; TLS is terminated at the API Gateway default endpoint. Adding a custom domain with an AWS Certificate Manager certificate would allow end-to-end encryption under a dedicated hostname.
 - Amazon Inspector is not yet enabled for continuous vulnerability scanning of ECS instances and container images; this is a natural next addition alongside ECR scan-on-push.
 - A content delivery network and function-as-a-service components are not implemented, and remain candidates for future iteration.
+
+```mermaid
+flowchart TD
+    %% ==========================================
+    %% COLOR PALETTE: STANDARD ENTERPRISE AWS
+    %% ==========================================
+    classDef client fill:#E2E8F0,stroke:#475569,stroke-width:2px,color:#0F172A
+    classDef edge fill:#F1F5F9,stroke:#334155,stroke-width:1.5px,color:#0F172A
+    classDef gateway fill:#F3E8FF,stroke:#6B21A8,stroke-width:1.5px,color:#3B0764
+    classDef auth fill:#FFE4E6,stroke:#BE123C,stroke-width:1.5px,color:#881337
+    classDef alb fill:#DCFCE7,stroke:#15803D,stroke-width:1.5px,color:#14532D
+    classDef compute fill:#E0F2FE,stroke:#0369A1,stroke-width:1.5px,color:#0C4A6E
+    classDef queue fill:#FFEDD5,stroke:#C2410C,stroke-width:1.5px,color:#7C2D12
+    classDef database fill:#E0E7FF,stroke:#4338CA,stroke-width:1.5px,color:#312E81
+    classDef endpoint fill:#F8FAFC,stroke:#64748B,stroke-width:1px,color:#334155
+    classDef external fill:#FEF3C7,stroke:#B45309,stroke-width:1.5px,color:#78350F
+
+    %% ==========================================
+    %% 1. CLIENT & PUBLIC EDGE TIER
+    %% ==========================================
+    USER["End User Browser"]:::client
+
+    subgraph EDGE_TIER ["Edge Services & DNS"]
+        R53["Route 53 DNS<br>cloud.hansel.lol"]:::edge
+        ACM["ACM TLS Certificate<br>cloud.hansel.lol"]:::edge
+    end
+
+    subgraph API_GATEWAY_TIER ["API Gateway & Auth Layer"]
+        APIGW["HTTP API Gateway<br>cloud-design-http-api"]:::gateway
+        APIGW_AUTH["JWT Authorizer"]:::gateway
+        COG_POOL["Cognito User Pool<br>cloud-design-user-pool"]:::auth
+    end
+
+    %% ==========================================
+    %% 2. NETWORK BOUNDARY (VPC)
+    %% ==========================================
+    subgraph VPC ["VPC: cloud-design-vpc (10.0.0.0/16 | Region: eu-west-3)"]
+        
+        VPCLINK["VPC Link<br>api-gateway-vpc-link"]:::gateway
+
+        subgraph PUBLIC_SUBNETS ["Public Subnets (2 AZs)"]
+            IGW["Internet Gateway<br>cloud-design-igw"]:::edge
+        end
+
+        subgraph PRIVATE_SUBNETS ["Private Subnets (2 AZs)"]
+            
+            ALB["Internal ALB<br>cloud-design-alb :80 HTTP"]:::alb
+
+            subgraph ECS_CLUSTER ["ECS Cluster (EC2 Auto Scaling Group)"]
+                API_TASK["api-gateway Task<br>Port 3000 | Image: api-gateway-app:1.0.0"]:::compute
+                INV_TASK["inventory Service<br>Port 8080 | CPU Target: 70%"]:::compute
+                BILL_TASK["billing Service<br>Port 8080 | CPU Target: 70%"]:::compute
+                RABBIT_TASK["rabbitmq Broker<br>Port 5672 | Queue: billing-queue"]:::queue
+            end
+
+            subgraph DATABASE_HOSTS ["Dedicated DB EC2 Hosts (EBS gp3 10GB)"]
+                INV_DB["inventory-db (PostgreSQL)<br>Port 5432"]:::database
+                BILL_DB["billing-db (PostgreSQL)<br>Port 5432"]:::database
+            end
+
+            subgraph VPCE_GROUP ["Interface VPC Endpoints (Security Group: vpc_endpoints_sg)"]
+                EP_ECR["ECR API & DKR Endpoints"]:::endpoint
+                EP_SM["Secrets Manager Endpoint"]:::endpoint
+                EP_LOGS["CloudWatch Logs Endpoint"]:::endpoint
+            end
+        end
+    end
+
+    %% ==========================================
+    %% 3. MANAGED AWS SERVICES
+    %% ==========================================
+    subgraph AWS_MANAGED ["AWS Managed Infrastructure"]
+        ECR["ECR Repositories<br>(5 Repositories)"]:::external
+        SM["Secrets Manager<br>cloud_design_credentials"]:::external
+        CW["CloudWatch<br>Logs & Dashboards"]:::external
+    end
+
+    %% ==========================================
+    %% RELATIONSHIPS & DATA FLOWS
+    %% ==========================================
+    USER -->|"DNS Lookup"| R53
+    USER -->|"HTTPS :443"| APIGW
+    R53 -.->|"SSL/TLS"| ACM
+
+    APIGW -.->|"Authenticate"| APIGW_AUTH
+    APIGW_AUTH -.->|"Verify Token"| COG_POOL
+
+    APIGW -->|"HTTP Proxy via VPC Link"| VPCLINK
+    VPCLINK -->|"HTTP :80"| ALB
+    ALB -->|"HTTP :3000"| API_TASK
+
+    API_TASK -->|"AWS Service Connect :8080"| INV_TASK
+    API_TASK -->|"AWS Service Connect :8080"| BILL_TASK
+    API_TASK -->|"AMQP :5672"| RABBIT_TASK
+    BILL_TASK -->|"AMQP :5672 Publish"| RABBIT_TASK
+
+    INV_TASK -->|"TCP :5432"| INV_DB
+    BILL_TASK -->|"TCP :5432"| BILL_DB
+
+    ECS_CLUSTER -.-> EP_ECR
+    DATABASE_HOSTS -.-> EP_ECR
+    EP_ECR --- ECR
+
+    ECS_CLUSTER -.-> EP_SM
+    DATABASE_HOSTS -.-> EP_SM
+    EP_SM --- SM
+
+    ECS_CLUSTER -.-> EP_LOGS
+    EP_LOGS --- CW
+```
