@@ -63,3 +63,8 @@ module "secrets" {
   billing_db_password = var.billing_db_password
   billing_db_name     = var.billing_db_name
 }
+
+module "acm" {
+  source = "../modules/aws/acm"
+  domain_name = "cloud.hansel.lol"
+}

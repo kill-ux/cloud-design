@@ -17,3 +17,9 @@ output "api_gateway_url" {
   description = "The API Gateway endpoint URL"
   value       = module.cognito.api_gateway_url
 }
+
+
+output "target_domain_name" {
+  value = module.cognito.target_domain_name
+}
+
