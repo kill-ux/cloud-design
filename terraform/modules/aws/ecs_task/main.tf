@@ -82,7 +82,7 @@ resource "aws_ecs_service" "service" {
   force_new_deployment               = true
   deployment_maximum_percent         = 100
   deployment_minimum_healthy_percent = 0
-  availability_zone_rebalancing      = "DISABLED"
+  # availability_zone_rebalancing      = "DISABLED"
   force_delete                       = true
 
   launch_type = var.placement_constraint_expression != "" ? "EC2" : null
