@@ -76,3 +76,7 @@ output "cert_validation_record" {
 output "cert_arn" {
   value = module.acm.cert_arn
 }
+
+output "vpc_endpoints_sg_id" {
+  value = module.vpc_endpoints_sg.id
+}

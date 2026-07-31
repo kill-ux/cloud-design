@@ -17,12 +17,6 @@ data "aws_ssm_parameter" "ecs_ami" {
   name = "/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id"
 }
 
-# resource "aws_key_pair" "my_key" {
-#   key_name   = "my-ecs-key"
-#   public_key = file(".keys/id_ecs.pub")
-# }
-
-
 resource "aws_launch_template" "ecs_lt" {
   name_prefix   = "cloud-design-ecs-"
   image_id      = data.aws_ssm_parameter.ecs_ami.value
@@ -71,7 +65,6 @@ resource "aws_ecs_capacity_provider" "cloud_design_cp" {
 
   auto_scaling_group_provider {
     auto_scaling_group_arn         = aws_autoscaling_group.ecs_asg.arn
-    managed_termination_protection = "DISABLED"
     managed_scaling {
       status                    = "ENABLED"
       target_capacity           = 100

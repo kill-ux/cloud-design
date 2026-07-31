@@ -58,8 +58,8 @@ resource "aws_apigatewayv2_integration" "integration" {
   integration_method = "ANY"
 
   connection_type = "VPC_LINK"
-  connection_id = aws_apigatewayv2_vpc_link.alb_link.id
-  integration_uri    = var.alb_listener_arn
+  connection_id   = aws_apigatewayv2_vpc_link.alb_link.id
+  integration_uri = var.alb_listener_arn
 }
 
 # Protected Route
@@ -84,13 +84,26 @@ resource "aws_apigatewayv2_domain_name" "custom_domain" {
   domain_name = var.domain_name
   domain_name_configuration {
     certificate_arn = var.cert_arn
-    endpoint_type = "REGIONAL"
+    endpoint_type   = "REGIONAL"
     security_policy = "TLS_1_2"
   }
 }
 
 resource "aws_apigatewayv2_api_mapping" "mapping" {
-  api_id = aws_apigatewayv2_api.gateway.id
+  api_id      = aws_apigatewayv2_api.gateway.id
   domain_name = aws_apigatewayv2_domain_name.custom_domain.id
-  stage = aws_apigatewayv2_stage.default.id
+  stage       = aws_apigatewayv2_stage.default.id
+}
+
+data "aws_route53_zone" "this" {
+  name         = "hansel.lol"
+  private_zone = false
+}
+
+resource "aws_route53_record" "api_custom_domain" {
+  zone_id = data.aws_route53_zone.this.zone_id
+  name = var.domain_name
+  type = "CNAME"
+  ttl = 300
+  records = [aws_apigatewayv2_domain_name.custom_domain.domain_name_configuration[0].target_domain_name]
 }
