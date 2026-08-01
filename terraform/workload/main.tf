@@ -30,7 +30,6 @@ locals {
   billing_db_sg_id     = data.terraform_remote_state.foundation.outputs.billing_db_sg_id
 
   cert_arn = data.terraform_remote_state.foundation.outputs.cert_arn
-  vpc_endpoints_sg_id = data.terraform_remote_state.foundation.outputs.vpc_endpoints_sg_id
 }
 
 module "alb" {
@@ -123,13 +122,4 @@ resource "aws_budgets_budget" "monthly_cost_alert" {
     notification_type          = "ACTUAL"
     subscriber_email_addresses = ["mustaphaboutoubdev@gmail.com"]
   }
-}
-
-
-module "ssm" {
-  source = "../modules/aws/ssm"
-  vpc_id = local.vpc_id
-  private_subnet_ids = local.private_subnet_ids
-  aws_region = var.aws_region
-  vpc_endpoints_sg_id = local.vpc_endpoints_sg_id
 }

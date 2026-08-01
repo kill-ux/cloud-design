@@ -32,8 +32,8 @@ resource "aws_ecs_task_definition" "task" {
           protocol      = "tcp"
         }
       ]
-     
-      secrets = var.secrets
+
+      secrets     = var.secrets
       environment = var.environment_variables
       logConfiguration = {
         logDriver = "awslogs"
@@ -83,7 +83,7 @@ resource "aws_ecs_service" "service" {
   deployment_maximum_percent         = 100
   deployment_minimum_healthy_percent = 0
   # availability_zone_rebalancing      = "DISABLED"
-  force_delete                       = true
+  force_delete = true
 
   launch_type = var.placement_constraint_expression != "" ? "EC2" : null
 
@@ -91,8 +91,8 @@ resource "aws_ecs_service" "service" {
     for_each = var.placement_constraint_expression == "" ? [1] : []
     content {
       capacity_provider = var.capacity_provider_name
-      weight            = 100
-      base              = 0
+      weight            = 100 // we don't care here because we have juat one capacity (hwo many ersantage run in ec2 of tasks)
+      base              = 0   // also we don't care so all the things well be in ec2 so we to not desice if base run at least on or two
     }
   }
 
