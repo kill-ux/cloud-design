@@ -130,6 +130,19 @@ ssh:
 		ssh -i .keys/id_ecs ec2-user@$$INSTANCE_IP; \
 	fi
 
+.PHONY: ssm
+ssm: 
+	@INSTANCE_ID=$$(aws ec2 describe-instances \
+		--region $${AWS_REGION:-eu-west-3} \
+		--query 'Reservations[].Instances[].{ID:InstanceId,Name:Tags[?Key==`Name`]|[0].Value}' \
+		--output table); \
+  echo "$$INSTANCE_ID"; \
+	echo ""; \
+	read -p "Enter Instance ID to connect: " CHOICE; \
+	if [ -z "$$CHOICE" ]; then echo "No instance selected."; exit 1; fi; \
+	aws ssm start-session --target $$CHOICE --region $${AWS_REGION:-eu-west-3}
+
+
 cluster:
 	@echo "$(GREEN)ECS Cluster Info:$(NC)"
 	aws ecs describe-clusters \
