@@ -13,7 +13,453 @@
     <header>
       <span class="tag">LAB TECHNICAL SPECIFICATION</span>
       <h1>AWS Cloud Architecture & Microservices Lab</h1>
-      <div class="meta">Infrastructure as Code: Terraform 1.10+ | Container Engine: Amazon ECS | Region: eu-west-3</div>
+      <div class="meta">Infrastructure as Code: Terraform 1.10+ | Container Engine: Amazon ECS | Region: eu-west-3</div><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cloud-Design — AWS Architecture & Technical Specification</title>
+  <meta name="description" content="Technical specification for the Cloud-Design microservices platform: AWS architecture, Terraform modules, security posture, and cost model.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/diagram.css">
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <span class="tag">LAB TECHNICAL SPECIFICATION</span>
+      <h1>Cloud-Design</h1>
+      <div class="subhead">AWS microservices platform — API Gateway, ECS/EC2, self-hosted Postgres, Cognito auth</div>
+      <div class="meta">
+        <span>Terraform &ge; 1.0</span><span class="dot">&middot;</span>
+        <span>AWS Provider ~&gt; 6.0</span><span class="dot">&middot;</span>
+        <span>Amazon ECS (EC2 capacity provider)</span><span class="dot">&middot;</span>
+        <span>Region: eu-west-3</span>
+      </div>
+    </header>
+
+    <!-- Navigation Bar -->
+    <nav class="nav-bar">
+      <button class="nav-item active" data-tab="diagram-tab">SYSTEM ARCHITECTURE</button>
+      <button class="nav-item" data-tab="services-tab">MICROSERVICES STACK</button>
+      <button class="nav-item" data-tab="modules-tab">TERRAFORM MODULES</button>
+      <button class="nav-item" data-tab="security-tab">SECURITY &amp; COST</button>
+      <button class="nav-item" data-tab="ops-tab">OPERATIONAL COMMANDS</button>
+    </nav>
+
+    <!-- TAB 1: PURE HTML/CSS DIAGRAM -->
+    <div id="diagram-tab" class="tab-content active">
+      <div class="section-panel">
+        <div class="section-header">
+          <span>01. System Architecture</span>
+          <span class="header-note">1 VPC &middot; 2 AZs &middot; No NAT Gateway</span>
+        </div>
+
+        <div class="diagram-viewport">
+
+          <!-- EDGE TIER -->
+          <div class="edge-tier">
+            <div class="edge-label">Public internet</div>
+            <div class="edge-row">
+              <div class="edge-node">
+                <div class="edge-title">Route 53</div>
+                <div class="edge-sub">cloud.hansel.lol</div>
+              </div>
+              <span class="edge-arrow">&rarr;</span>
+              <div class="edge-node">
+                <div class="edge-title">ACM Certificate</div>
+                <div class="edge-sub">DNS-validated, TLS 1.2</div>
+              </div>
+              <span class="edge-arrow">&rarr;</span>
+              <div class="edge-node edge-node-wide">
+                <div class="edge-title">API Gateway (HTTP API)</div>
+                <div class="edge-sub">Cognito JWT authorizer on every route</div>
+              </div>
+              <span class="edge-arrow">&rarr;</span>
+              <div class="edge-node">
+                <div class="edge-title">VPC Link</div>
+                <div class="edge-sub">private integration</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="aws-region">
+            <div class="region-label">AWS Region &middot; eu-west-3</div>
+
+            <div class="vpc-box">
+              <div class="vpc-label">VPC &middot; 10.0.0.0/16</div>
+
+              <!-- Public subnets -->
+              <div class="subnet-strip subnet-public">
+                <div class="subnet-label">
+                  <span>Public subnets &middot; 2 AZs</span>
+                  <span>Internet Gateway route &middot; no compute placed here</span>
+                </div>
+              </div>
+
+              <div class="flow-bar">
+                <span>VPC LINK</span><span class="flow-arrow">&darr;</span>
+                <span>INTERNAL ALB &middot; :80</span>
+              </div>
+
+              <!-- Private subnets -->
+              <div class="subnet-strip subnet-private">
+                <div class="subnet-label">
+                  <span>Private subnets &middot; 2 AZs (no route to internet)</span>
+                  <span>ALB target &middot; ECS tasks &middot; DB hosts</span>
+                </div>
+
+                <div class="node-row">
+                  <div class="node-card node-card-wide">
+                    <div class="node-title">Internal ALB</div>
+                    <div class="node-port">PORT 80 &middot; HTTP</div>
+                    <div class="node-role">Spans both AZs &middot; single target group</div>
+                    <span class="badge badge-ok">Multi-AZ</span>
+                  </div>
+                </div>
+
+                <div class="tier-label">ECS cluster &middot; EC2 Auto Scaling Group &middot; t3.micro &middot; min 4 / max 8</div>
+                <div class="node-row">
+                  <div class="node-card">
+                    <div class="node-title">api-gateway</div>
+                    <div class="node-port">:3000</div>
+                    <div class="node-role">Scales on request count</div>
+                    <span class="badge badge-ok">Autoscaled</span>
+                  </div>
+                  <div class="node-card">
+                    <div class="node-title">inventory</div>
+                    <div class="node-port">:8080</div>
+                    <div class="node-role">Scales on CPU</div>
+                    <span class="badge badge-ok">Autoscaled</span>
+                  </div>
+                  <div class="node-card">
+                    <div class="node-title">billing</div>
+                    <div class="node-port">:8080</div>
+                    <div class="node-role">Scales on CPU</div>
+                    <span class="badge badge-ok">Autoscaled</span>
+                  </div>
+                  <div class="node-card">
+                    <div class="node-title">rabbitmq</div>
+                    <div class="node-port">:5672</div>
+                    <div class="node-role">Durable, quorum queue</div>
+                    <span class="badge badge-warn">1 task</span>
+                  </div>
+                </div>
+
+                <div class="tier-label">Dedicated DB hosts &middot; pinned to one EC2 instance &middot; 1 AZ only</div>
+                <div class="node-row">
+                  <div class="node-card">
+                    <div class="node-title">inventory-db</div>
+                    <div class="node-port">:5432 &middot; Postgres</div>
+                    <div class="node-role">10 GB encrypted EBS (gp3)</div>
+                    <span class="badge badge-warn">Single AZ</span>
+                  </div>
+                  <div class="node-card">
+                    <div class="node-title">billing-db</div>
+                    <div class="node-port">:5432 &middot; Postgres</div>
+                    <div class="node-role">10 GB encrypted EBS (gp3)</div>
+                    <span class="badge badge-warn">Single AZ</span>
+                  </div>
+                </div>
+
+                <div class="tier-label">VPC endpoints &middot; replace NAT Gateway for private-subnet AWS access</div>
+                <div class="node-row node-row-endpoints">
+                  <div class="node-card node-card-endpoint">ECR (api / dkr)</div>
+                  <div class="node-card node-card-endpoint">ECS &middot; telemetry &middot; agent</div>
+                  <div class="node-card node-card-endpoint">CloudWatch Logs</div>
+                  <div class="node-card node-card-endpoint">Secrets Manager</div>
+                  <div class="node-card node-card-endpoint">S3 (gateway)</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="managed-row">
+              <div class="managed-label">AWS managed services outside the VPC data plane</div>
+              <div class="node-row">
+                <div class="node-card node-card-managed">ECR &middot; 5 repositories</div>
+                <div class="node-card node-card-managed">Secrets Manager &middot; 1 secret</div>
+                <div class="node-card node-card-managed">Cognito user pool</div>
+                <div class="node-card node-card-managed">CloudWatch dashboard</div>
+                <div class="node-card node-card-managed">AWS Budgets &middot; $50/mo alert</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="legend">
+          <span><span class="badge badge-ok">Autoscaled / Multi-AZ</span> — redundant or elastic by design</span>
+          <span><span class="badge badge-warn">Single AZ / 1 task</span> — accepted availability trade-off, see Security &amp; Cost</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: MICROSERVICES -->
+    <div id="services-tab" class="tab-content">
+      <div class="section-panel">
+        <div class="section-header">
+          <span>02. Microservices Stack Specification</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Service</th>
+              <th>Container Port</th>
+              <th>Service Connect DNS</th>
+              <th>Task Size</th>
+              <th>Scaling</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>api-gateway</strong></td>
+              <td><code>3000</code></td>
+              <td><code>api-gateway.local</code></td>
+              <td>128 CPU / 256 MB</td>
+              <td>Request count &middot; target 1500 &middot; max 2</td>
+            </tr>
+            <tr>
+              <td><strong>inventory</strong></td>
+              <td><code>8080</code></td>
+              <td><code>inventory.local</code></td>
+              <td>128 CPU / 256 MB</td>
+              <td>CPU &middot; target 70% &middot; max 2</td>
+            </tr>
+            <tr>
+              <td><strong>billing</strong></td>
+              <td><code>8080</code></td>
+              <td><code>billing.local</code></td>
+              <td>128 CPU / 256 MB</td>
+              <td>CPU &middot; target 70% &middot; max 2</td>
+            </tr>
+            <tr>
+              <td><strong>rabbitmq</strong></td>
+              <td><code>5672</code></td>
+              <td><code>rabbitmq.local</code></td>
+              <td>128 CPU / 256 MB</td>
+              <td>Fixed &middot; 1 task</td>
+            </tr>
+            <tr>
+              <td><strong>inventory-db</strong></td>
+              <td><code>5432</code></td>
+              <td><code>inventory-db.local</code></td>
+              <td>128 CPU / 256 MB</td>
+              <td>Fixed &middot; pinned to a dedicated host</td>
+            </tr>
+            <tr>
+              <td><strong>billing-db</strong></td>
+              <td><code>5432</code></td>
+              <td><code>billing-db.local</code></td>
+              <td>128 CPU / 256 MB</td>
+              <td>Fixed &middot; pinned to a dedicated host</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="footnote">All services communicate over ECS Service Connect on the <code>local</code> namespace &mdash; no hardcoded IPs or load balancer hops between internal services.</p>
+      </div>
+    </div>
+
+    <!-- TAB 3: TERRAFORM MODULES -->
+    <div id="modules-tab" class="tab-content">
+      <div class="section-panel">
+        <div class="section-header">
+          <span>03. Terraform IaC Modules</span>
+          <span class="header-note">terraform/foundation &middot; terraform/workload</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Module Path</th>
+              <th>Stack</th>
+              <th>Primary Managed Resources</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>modules/aws/vpc</code></td>
+              <td>foundation</td>
+              <td>VPC, 2 public + 2 private subnets, IGW, route tables, interface &amp; gateway VPC endpoints</td>
+            </tr>
+            <tr>
+              <td><code>modules/aws/security_group</code></td>
+              <td>foundation</td>
+              <td>Security groups chained by reference (ALB &rarr; app &rarr; DB), no open ingress</td>
+            </tr>
+            <tr>
+              <td><code>modules/aws/iam</code></td>
+              <td>foundation</td>
+              <td>ECS EC2 instance role/profile, ECS task execution role, Service Connect &amp; Secrets policy</td>
+            </tr>
+            <tr>
+              <td><code>modules/aws/ecr</code></td>
+              <td>foundation</td>
+              <td>5 ECR repositories, scan-on-push enabled</td>
+            </tr>
+            <tr>
+              <td><code>modules/aws/secrets</code></td>
+              <td>foundation</td>
+              <td>Single Secrets Manager secret holding all DB &amp; RabbitMQ credentials</td>
+            </tr>
+            <tr>
+              <td><code>modules/aws/acm</code></td>
+              <td>foundation</td>
+              <td>DNS-validated ACM certificate for the custom API domain</td>
+            </tr>
+            <tr>
+              <td><code>modules/aws/alb</code></td>
+              <td>workload</td>
+              <td>Internal Application Load Balancer, HTTP listener, target group + health check</td>
+            </tr>
+            <tr>
+              <td><code>modules/aws/ecs</code></td>
+              <td>workload</td>
+              <td>ECS cluster, EC2 launch template &amp; ASG, managed-scaling capacity provider</td>
+            </tr>
+            <tr>
+              <td><code>modules/aws/ecs_task</code></td>
+              <td>workload</td>
+              <td>Task definitions, ECS services, Service Connect, autoscaling policies, CloudWatch Logs</td>
+            </tr>
+            <tr>
+              <td><code>modules/aws/ecs_db_instance</code></td>
+              <td>workload</td>
+              <td>Dedicated EC2 host per database, placement attribute, EBS mount user-data</td>
+            </tr>
+            <tr>
+              <td><code>modules/aws/ebs</code></td>
+              <td>workload</td>
+              <td>Encrypted gp3 volume + attachment per database host</td>
+            </tr>
+            <tr>
+              <td><code>modules/aws/cognito</code></td>
+              <td>workload</td>
+              <td>User pool, app client, HTTP API Gateway, JWT authorizer, VPC Link, custom domain</td>
+            </tr>
+            <tr>
+              <td><code>modules/aws/dashboard</code></td>
+              <td>workload</td>
+              <td>CloudWatch dashboard &mdash; CPU/memory per ECS service</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 4: SECURITY & COST -->
+    <div id="security-tab" class="tab-content">
+      <div class="section-panel">
+        <div class="section-header">
+          <span>04. Security &amp; Cost Posture</span>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <h3 class="block-title">Request authentication</h3>
+            <ol class="flow-steps">
+              <li>Client authenticates against the <strong>Cognito user pool</strong> and receives a JWT.</li>
+              <li>Every route on the <strong>HTTP API Gateway</strong> requires that token via a JWT authorizer &mdash; unauthenticated requests are rejected at the edge, before reaching the VPC.</li>
+              <li>API Gateway proxies the request over a <strong>VPC Link</strong> to the internal ALB, which forwards to the <code>api-gateway</code> ECS task.</li>
+              <li>Internal service-to-service traffic is restricted by security group reference, not CIDR &mdash; each hop (ALB &rarr; app &rarr; DB) only accepts traffic from its specific upstream.</li>
+            </ol>
+          </div>
+          <div>
+            <h3 class="block-title">Secrets &amp; data protection</h3>
+            <ul class="flow-steps">
+              <li>All DB and RabbitMQ credentials live in a single <strong>Secrets Manager</strong> secret, injected into containers at runtime &mdash; never in source control or task definitions.</li>
+              <li>Both database EBS volumes are <strong>encrypted at rest</strong>.</li>
+              <li>ECR repositories run <strong>scan-on-push</strong> for image vulnerabilities.</li>
+              <li>Private subnets have no internet route; AWS API access goes through VPC endpoints only.</li>
+            </ul>
+          </div>
+        </div>
+
+        <h3 class="block-title">Cost levers</h3>
+        <table>
+          <thead>
+            <tr><th>Decision</th><th>Saves</th><th>Trade-off</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>VPC endpoints instead of NAT Gateway</td>
+              <td>NAT hourly charge + data processing fee</td>
+              <td>Only viable because private-subnet egress is limited to AWS APIs</td>
+            </tr>
+            <tr>
+              <td>ECS on EC2 (<code>t3.micro</code>) instead of Fargate</td>
+              <td>Cheaper baseline compute at this scale</td>
+              <td>ASG floor of 4 instances is the largest recurring cost &mdash; tune <code>min_size</code> to trade cost for headroom</td>
+            </tr>
+            <tr>
+              <td>Self-hosted Postgres on EBS instead of RDS</td>
+              <td>Avoids RDS instance + storage pricing</td>
+              <td>No automated backups/patching, no Multi-AZ failover</td>
+            </tr>
+            <tr>
+              <td>HTTP API Gateway (not REST)</td>
+              <td>Lower per-request pricing</td>
+              <td>&mdash;</td>
+            </tr>
+          </tbody>
+        </table>
+
+        
+      </div>
+    </div>
+
+    <!-- TAB 5: OPERATIONAL COMMANDS -->
+    <div id="ops-tab" class="tab-content">
+      <div class="section-panel">
+        <div class="section-header">
+          <span>05. Operational Commands (Makefile)</span>
+        </div>
+        <div class="cmd-list">
+          <div class="cmd-item">
+            <span class="cmd-name">make plan</span>
+            <span class="cmd-desc">Validate configuration and generate an execution plan</span>
+          </div>
+          <div class="cmd-item">
+            <span class="cmd-name">make apply</span>
+            <span class="cmd-desc">Deploy infrastructure changes to the AWS account</span>
+          </div>
+          <div class="cmd-item">
+            <span class="cmd-name">make destroy</span>
+            <span class="cmd-desc">Tear down all provisioned infrastructure, including ECR</span>
+          </div>
+          <div class="cmd-item">
+            <span class="cmd-name">make destroy-keep-ecr</span>
+            <span class="cmd-desc">Tear down infrastructure while preserving ECR repositories</span>
+          </div>
+          <div class="cmd-item">
+            <span class="cmd-name">make ssh</span>
+            <span class="cmd-desc">Look up the active EC2 instance in the ASG and open an SSH session</span>
+          </div>
+          <div class="cmd-item">
+            <span class="cmd-name">make cluster</span>
+            <span class="cmd-desc">Show ECS cluster health and registered container-instance count</span>
+          </div>
+          <div class="cmd-item">
+            <span class="cmd-name">make services</span>
+            <span class="cmd-desc">List active ECS services and their running task counts</span>
+          </div>
+          <div class="cmd-item">
+            <span class="cmd-name">make lint</span>
+            <span class="cmd-desc">Format and validate all Terraform code</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <span>Cloud-Design &mdash; Technical Specification</span>
+      <span>index.html &middot; css/style.css &middot; css/diagram.css &middot; js/app.js</span>
+    </footer>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
     </header>
 
     <!-- Navigation Bar -->

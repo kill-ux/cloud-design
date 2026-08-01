@@ -1,4 +1,4 @@
-.PHONY: help init plan apply destroy fmt validate clean ssh cluster services
+.PHONY: help init plan apply destroy fmt validate clean ssh cluster services dev-shell
 
 # Colors
 RED := \033[0;31m
@@ -24,6 +24,13 @@ help:
 	@echo "  cluster         Show cluster info"
 	@echo "  services        Show services info"
 	@echo "  clean           Clean cache and locks"
+
+dev-shell:
+	docker run -it --rm \
+		-v $(shell pwd):/workspace \
+		-v $(HOME)/.aws:/root/.aws \
+		cloud-design-dev:latest
+
 
 init:
 	@echo "$(GREEN)Initializing Terraform...$(NC)"
@@ -143,5 +150,6 @@ lint: fmt validate
 
 full-deploy: plan apply-tfplan
 	@echo "$(GREEN)Deployment complete!$(NC)"
+
 
 .DEFAULT_GOAL := help

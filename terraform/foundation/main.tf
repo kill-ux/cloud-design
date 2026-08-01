@@ -29,22 +29,6 @@ module "iam" {
   source = "../modules/aws/iam"
 }
 
-locals {
-  ecr_repo_names = toset([
-    "inventory-app",
-    "billing-app",
-    "api-gateway-app",
-    "rabbitmq",
-    "postgres-db"
-  ])
-}
-
-# import {
-#   for_each = local.ecr_repo_names
-#   to       = module.ecr.aws_ecr_repository.app_repos[each.value]
-#   id       = each.value
-# }
-
 module "ecr" {
   source = "../modules/aws/ecr"
 }

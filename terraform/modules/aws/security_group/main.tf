@@ -24,15 +24,6 @@ resource "aws_vpc_security_group_ingress_rule" "ingress" {
 
 # Egress rules
 resource "aws_vpc_security_group_egress_rule" "egress" {
-  # for_each = { for i, rule in var.egress_rules : i => rule }
-
-  # security_group_id = aws_security_group.sg.id
-  # description       = each.value.description
-  # from_port         = each.value.from_port
-  # to_port           = each.value.to_port
-  # ip_protocol       = each.value.protocol
-  # cidr_ipv4         = each.value.cidr_ipv4
-
   count = length(var.egress_rules)
 
   security_group_id = aws_security_group.sg.id
