@@ -38,3 +38,10 @@ curl -X POST \
     } 
   }' \
   https://cognito-idp.eu-west-3.amazonaws.com/ | jq
+
+
+aws ecs list-clusters
+aws s3 ls
+aws ecs list-services --cluster cloud-design-cluster
+aws ecs list-tasks --cluster cloud-design-cluster
+aws ecs stop-task --cluster cloud-design-cluster  --task <id>
