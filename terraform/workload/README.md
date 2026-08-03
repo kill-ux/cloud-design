@@ -13,7 +13,7 @@ groups, IAM roles, ECR registry, secrets, and ACM cert are pulled in via
   listener on port 80, forwarding to the API Gateway service's target group
   (health check on `/health`).
 - **ECS cluster + capacity** (`module.ecs`) — an ECS cluster with Container
-  Insights enabled, backed by an EC2 Auto Scaling Group of `t3.micro`
+  Insights enabled, backed by an EC2 Auto Scaling Group of `t3.small`
   instances (`desired_capacity = 4`, `min_size = 4`, `max_size = 8`) via a
   managed-scaling capacity provider. Service Connect defaults to the
   `foundation` service-discovery namespace.
@@ -75,7 +75,7 @@ or testing auth flows.
 This is where nearly all of the recurring spend lives, and it's what the
 $50/month budget alert is watching:
 
-- **EC2 (`t3.micro` × 4–8, via the ASG)** — the dominant cost. The ASG
+- **EC2 (`t3.small` × 4–8, via the ASG)** — the dominant cost. The ASG
   floor is `min_size = 4`, so you're paying for 4 running instances even at
   idle; raise/lower `desired_capacity`/`min_size`/`max_size` in `main.tf` to
   trade cost for headroom.

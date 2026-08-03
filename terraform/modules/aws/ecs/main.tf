@@ -20,7 +20,7 @@ data "aws_ssm_parameter" "ecs_ami" {
 resource "aws_launch_template" "ecs_lt" {
   name_prefix   = "cloud-design-ecs-"
   image_id      = data.aws_ssm_parameter.ecs_ami.value
-  instance_type = "t3.micro"
+  instance_type = "t3.small"
 
   iam_instance_profile {
     name = var.ecs_instance_profile_name

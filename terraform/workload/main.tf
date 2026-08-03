@@ -46,8 +46,8 @@ module "ecs" {
   ecs_instance_sg_id              = local.ecs_instance_sg_id
   private_subnet_ids              = local.private_subnet_ids
   public_subnet_ids               = local.public_subnet_ids
-  desired_capacity                = 4
-  min_size                        = 4
+  desired_capacity                = 2
+  min_size                        = 2
   max_size                        = 8
   service_discovery_namespace_arn = local.service_discovery_namespace_arn
 }

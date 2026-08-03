@@ -180,7 +180,7 @@ flowchart TD
 ### Compute
 
 - ECS cluster backed by an EC2 Auto Scaling Group capacity provider
-  (`t3.micro`), rather than Fargate, so the databases can sit on persistent
+  (`t3.micsmallro`), rather than Fargate, so the databases can sit on persistent
   EBS-backed storage while staying in a predictable cost envelope.
 - Each application service runs as an ECS service with target-tracking auto
   scaling (CPU-based for inventory and billing, request-count-based for the
@@ -218,7 +218,7 @@ flowchart TD
   threshold.
 - Skipping NAT Gateway and Fargate in favor of VPC endpoints and a small EC2
   capacity provider keeps the baseline cost low; the ASG floor
-  (`min_size = 4` `t3.micro` instances) is the main lever if you want to run
+  (`min_size = 4` `t3.small` instances) is the main lever if you want to run
   it cheaper.
 
 ---

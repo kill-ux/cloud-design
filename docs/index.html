@@ -121,7 +121,7 @@
                   </div>
                 </div>
 
-                <div class="tier-label">ECS cluster &middot; EC2 Auto Scaling Group &middot; t3.micro &middot; min 4 / max 8</div>
+                <div class="tier-label">ECS cluster &middot; EC2 Auto Scaling Group &middot; t3.small &middot; min 4 / max 8</div>
                 <div class="node-row">
                   <div class="node-card">
                     <div class="node-title">api-gateway</div>
@@ -387,7 +387,7 @@
               <td>Only viable because private-subnet egress is limited to AWS APIs</td>
             </tr>
             <tr>
-              <td>ECS on EC2 (<code>t3.micro</code>) instead of Fargate</td>
+              <td>ECS on EC2 (<code>t3.small</code>) instead of Fargate</td>
               <td>Cheaper baseline compute at this scale</td>
               <td>ASG floor of 4 instances is the largest recurring cost &mdash; tune <code>min_size</code> to trade cost for headroom</td>
             </tr>
